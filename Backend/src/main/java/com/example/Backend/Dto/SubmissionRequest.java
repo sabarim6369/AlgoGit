@@ -5,6 +5,7 @@ public class SubmissionRequest {
     private String platform;
     private String code;
     private String repoUrl;
+    private String title;
 
     // Getters and setters
     public String getEmail() { return email; }
@@ -23,4 +24,12 @@ public class SubmissionRequest {
     public void setRepourl(String repoUrl) {
         this.repoUrl = repoUrl;
     }
+    public void settile(String title){
+        this.title=title;
+    }
+    public String getTitle(){
+        return title;
+    }
+
+
 }
