@@ -325,3 +325,10 @@ function showToast(message, type = 'success') {
   }, 4000);
 }
 
+document.getElementById("logoutBtn").addEventListener("click", () => {
+  chrome.storage.local.clear(() => {
+    showToast("Logged out.");
+    document.getElementById("repoInfo").classList.add("hidden");
+    document.getElementById("repoSetup").classList.remove("hidden");
+  });
+});
