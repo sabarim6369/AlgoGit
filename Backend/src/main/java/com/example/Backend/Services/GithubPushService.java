@@ -1,26 +1,28 @@
 package com.example.Backend.Services;
 
-import com.example.Backend.Models.Submissionmodel;
 import com.example.Backend.Models.authmodel;
 import com.example.Backend.Repositories.Authrepo;
-import com.example.Backend.Repositories.Submissionrepo;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import java.util.Base64;
 import org.springframework.http.*;
+import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
+import java.util.Base64;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class GithubPushService {
     @Autowired
     private Authrepo authrepo;
 
-    public boolean pushToRepo(String email, String questionTitle, String code, String explanation,String platform) {
+    @Autowired
+    private AiService aiService;
+
+    public boolean pushToRepo(String email, String questionTitle, String code, String explanation, String platform) {
         authmodel data = authrepo.findByEmail(email);
         if (data == null || data.getGithuburl() == null || data.getGithubAccessToken() == null) {
             System.out.println("❌ Missing data for email: " + email);
@@ -28,7 +30,7 @@ public class GithubPushService {
         }
 
         try {
-            String repoUrl = data.getGithuburl(); // ex: https://github.com/username/repo.git
+            String repoUrl = data.getGithuburl();
             String token = data.getGithubAccessToken();
             String[] parts = repoUrl.replace("https://github.com/", "").replace(".git", "").split("/");
             String owner = parts[0];
@@ -39,10 +41,13 @@ public class GithubPushService {
             headers.setContentType(MediaType.APPLICATION_JSON);
             headers.setBearerAuth(token);
 
-            // Format folder name from question title (e.g., remove spaces/special chars)
-            String folderName = platform + "/" + sanitizeTitle(questionTitle);
+            String concept = aiService.extractConcept(code);
+            String cleanTitle = sanitizeTitle(questionTitle);
 
-            // Push solution.java
+            String baseFolder = platform + "/" + concept + "/" + cleanTitle;
+            int nextIndex = getNextFolderIndex(restTemplate, headers, owner, repo, platform + "/" + concept, cleanTitle);
+            String folderName = baseFolder + (nextIndex == 1 ? "" : ("_" + nextIndex));
+
             boolean codePush = pushFileToGithub(
                     restTemplate, headers, owner, repo,
                     folderName + "/solution.java",
@@ -50,7 +55,6 @@ public class GithubPushService {
                     code
             );
 
-            // Push explanation.txt
             boolean explanationPush = pushFileToGithub(
                     restTemplate, headers, owner, repo,
                     folderName + "/explanation.txt",
@@ -95,6 +99,40 @@ public class GithubPushService {
     }
 
     private String sanitizeTitle(String title) {
-        return title.trim().replaceAll("[^a-zA-Z0-9]", "_"); // Remove special chars/spaces
+        return title.trim().replaceAll("[^a-zA-Z0-9]", "_");
+    }
+
+    private int getNextFolderIndex(RestTemplate restTemplate, HttpHeaders headers,
+                                   String owner, String repo, String conceptPath, String cleanTitle) {
+        try {
+            String apiUrl = "https://api.github.com/repos/" + owner + "/" + repo + "/contents/" + conceptPath;
+            HttpEntity<Void> request = new HttpEntity<>(headers);
+            ResponseEntity<List> response = restTemplate.exchange(apiUrl, HttpMethod.GET, request, List.class);
+
+            if (response.getStatusCode().is2xxSuccessful()) {
+                List<Map<String, Object>> contents = (List<Map<String, Object>>) response.getBody();
+                List<String> matchingFolders = contents.stream()
+                        .filter(item -> "dir".equals(item.get("type")))
+                        .map(item -> (String) item.get("name"))
+                        .filter(name -> name.matches(cleanTitle + "(_\\d+)?"))
+                        .collect(Collectors.toList());
+
+                int maxIndex = matchingFolders.stream()
+                        .map(name -> name.replace(cleanTitle, "").replace("_", ""))
+                        .mapToInt(n -> {
+                            try {
+                                return n.isEmpty() ? 1 : Integer.parseInt(n);
+                            } catch (NumberFormatException e) {
+                                return 1;
+                            }
+                        })
+                        .max().orElse(0);
+
+                return maxIndex == 0 ? 1 : maxIndex + 1;
+            }
+        } catch (Exception e) {
+            // Log and default to 1
+        }
+        return 1;
     }
 }

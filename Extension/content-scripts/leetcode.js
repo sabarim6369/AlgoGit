@@ -42,8 +42,14 @@
 console.log("🚀 LeetCode content script loaded");
 
 function getLeetCodeSubmissionData() {
-  const lines = Array.from(document.querySelectorAll('[class*=view-line]'));
-  const code = lines.map(e => e.innerText).join('\n').trim();
+  const lineElements = Array.from(document.querySelectorAll('.view-line'));
+  
+  // Filter out lines with no text content or empty/duplicate lines
+  const lines = lineElements
+    .map(el => el.innerText.trim())
+    .filter((line, index, self) => line && self.indexOf(line) === index); // remove duplicates
+
+  const code = lines.join('\n').trim();
 
   if (!code) {
     console.warn("❌ Could not extract code from submission viewer");
@@ -62,6 +68,7 @@ function getLeetCodeSubmissionData() {
     code
   };
 }
+
 
 
 function sendSubmissionToBackground(data) {
