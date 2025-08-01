@@ -4,6 +4,7 @@ public class SubmissionRequest {
     private String email;
     private String platform;
     private String code;
+    private String repoUrl;
 
     // Getters and setters
     public String getEmail() { return email; }
@@ -14,4 +15,12 @@ public class SubmissionRequest {
 
     public String getCode() { return code; }
     public void setCode(String code) { this.code = code; }
+
+    public String getRepourl() {
+        return repoUrl;
+    }
+
+    public void setRepourl(String repoUrl) {
+        this.repoUrl = repoUrl;
+    }
 }

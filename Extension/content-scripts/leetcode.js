@@ -41,35 +41,14 @@
 // }, 3000);console.log("🚀 LeetCode content script loaded");
 console.log("🚀 LeetCode content script loaded");
 
-// function getLeetCodeSubmissionData() {
-//   const codeBlock = document.querySelector('pre');
-//   if (!codeBlock) return null;
-// console.log("✅ Code block found:", codeBlock);
-//   const code = codeBlock.innerText.trim();
-//   console.log("📄 Code block found:", code);
-//   const slug = location.pathname.split('/')[2];
-//   const title = slug
-//     .split('-')
-//     .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-//     .join(' ');
-
-//   return {
-//     platform: 'leetcode',
-//     title,
-//     code
-//   };
-// }
 function getLeetCodeSubmissionData() {
-  // Look inside the monaco-editor and grab the hidden textarea
-  const textarea = document.querySelector('.monaco-editor textarea');
-  const code = textarea?.value?.trim();
+  const lines = Array.from(document.querySelectorAll('[class*=view-line]'));
+  const code = lines.map(e => e.innerText).join('\n').trim();
 
   if (!code) {
-    console.warn("❌ Could not find code from the Monaco editor textarea");
+    console.warn("❌ Could not extract code from submission viewer");
     return null;
   }
-
-  console.log("📄 Code extracted from Monaco <textarea>:", code);
 
   const slug = location.pathname.split('/')[2];
   const title = slug
@@ -83,6 +62,7 @@ function getLeetCodeSubmissionData() {
     code
   };
 }
+
 
 function sendSubmissionToBackground(data) {
   console.log("📤 Sending submission to background:", data);

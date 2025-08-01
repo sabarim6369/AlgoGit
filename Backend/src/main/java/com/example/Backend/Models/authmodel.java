@@ -14,7 +14,7 @@ public class authmodel {
     private String email;
     private String name;
     private String githuburl;
-
+    private String githubAccessToken;
     public Long getId() {
         return id;
     }
@@ -45,5 +45,12 @@ public class authmodel {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+    public String getGithubAccessToken() {
+        return githubAccessToken;
+    }
+
+    public void setGithubAccessToken(String githubAccessToken) {
+        this.githubAccessToken = githubAccessToken;
     }
 }

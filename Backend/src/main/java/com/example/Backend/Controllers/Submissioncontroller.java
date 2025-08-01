@@ -27,6 +27,8 @@ public class Submissioncontroller {
         String code = request.getCode();
         String platform = request.getPlatform();
         String email = request.getEmail();
+//        String repoUrl=request.getRepourl();
+        System.out.println("✅✅✅"+request);
         String summary = aiService.summarizeSolution(code);
         boolean pushed = githubPushService.pushToRepo(email, platform, code, summary);
 

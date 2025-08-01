@@ -8,17 +8,28 @@
 </head>
 <body>
   <div id="app">
-    <div id="repoSetup" class="hidden">
-      <form id="repoSetupForm">
-        <label for="repoUrl">GitHub Repository URL *</label>
-        <input type="url" id="repoUrl" placeholder="https://github.com/username/repo.git" required />
-        <label for="Email">Email</label>
-        <input type="email" id="Email" placeholder="Enter your email" />
-        <label for="username">Display Name (optional)</label>
-        <input type="text" id="username" placeholder="My LeetCode Solutions" />
-        <button type="submit">Connect Repo</button>
-      </form>
-    </div>
+  <div id="repoSetup" class="repo-setup-section">
+  <form id="repoSetupForm">
+    <label for="repoUrl">GitHub Repository URL *</label>
+    <input type="url" id="repoUrl" placeholder="https://github.com/username/repo.git" required />
+    
+    <label for="Email">Email</label>
+    <input type="email" id="Email" placeholder="Enter your email" />
+    
+    <label for="username">Display Name (optional)</label>
+    <input type="text" id="username" placeholder="My LeetCode Solutions" />
+    
+    <!-- <button type="submit" class="connect-btn">Connect Repo</button> -->
+  </form>
+
+  <div class="divider"><span>OR</span></div>
+
+  <button id="githubLogin" class="github-btn" type="button">
+    <img src="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png" width="20" />
+    <span>Login with GitHub</span>
+  </button>
+</div>
+
 
   <div id="repoInfo" class="hidden">
   <div class="streak-header">
@@ -63,12 +74,7 @@
 
 
 
-    <!-- <div id="lastSubmission" class="hidden">
-      <h3>📘 Last Submission</h3>
-      <p><strong>Platform:</strong> <span id="lastPlatform"></span></p>
-      <p><strong>Problem:</strong> <span id="lastTitle"></span></p>
-      <p><strong>Commit:</strong> <span id="lastCommitMsg"></span></p>
-    </div> -->
+   
   </div>
 
   <script src="popup.js"></script>

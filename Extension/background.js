@@ -1,18 +1,20 @@
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   console.log("🔔 Message received in **background** script ✅✅✅", message);
+
   if (message.action === 'submission') {
     chrome.storage.local.get(['repoInfo', 'userEmail'], ({ repoInfo, userEmail }) => {
-      if (!repoInfo || !repoInfo.repoUrl) {
+      if (!repoInfo || !repoInfo.githuburl) {
         console.warn('❌ GitHub repo not configured');
         return;
       }
 
       const submissionData = {
         ...message.data,
-        repoUrl: repoInfo.repoUrl,
-        repoName: repoInfo.repoName || '',
+        repoUrl: repoInfo.githuburl,
+        repoName: repoInfo.name || '',
         email: userEmail || repoInfo.email || ''
       };
+      console.log('📝 Submission data:', submissionData);
 
       fetch('http://localhost:8080/submission/submit', {
         method: 'POST',

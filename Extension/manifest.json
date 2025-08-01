@@ -3,7 +3,7 @@
   "name": "AlgoGit",
   "version": "1.0",
   "description": "Sync your coding submissions across multiple platforms.",
-  "permissions": ["storage", "scripting", "activeTab", "notifications"],
+  "permissions": ["storage", "scripting", "activeTab", "notifications","identity"],
   "background": {
     "service_worker": "background.js"
   },
@@ -21,5 +21,12 @@
       "js": ["content-scripts/leetcode.js"],
       "run_at": "document_idle"
     }
-  ]
+  ],
+   "host_permissions": [
+    "https://github.com/*"
+  ],
+    "oauth2": {
+    "client_id": "Ov23liMfOlf2emj68SBT",
+    "scopes": ["repo"]
+  }
 }
