@@ -10,8 +10,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         ...message.data,
         repoUrl: repoInfo.repoUrl,
         repoName: repoInfo.repoName || '',
-                email: userEmail || repoInfo.email || ''  // use stored email
-
+        email: userEmail || repoInfo.email || '' 
       };
 
       fetch('http://localhost:8080/submission/submit', {

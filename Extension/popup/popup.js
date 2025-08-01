@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
   const repoSetupDiv = document.getElementById('repoSetup');
   const repoInfoDiv = document.getElementById('repoInfo');
-  const lastSubmissionDiv = document.getElementById('lastSubmission');
+  // const lastSubmissionDiv = document.getElementById('lastSubmission'); // commented out
 
   const repoSetupForm = document.getElementById('repoSetupForm');
   const repoUrlInput = document.getElementById('repoUrl');
@@ -9,23 +9,23 @@ document.addEventListener('DOMContentLoaded', () => {
   const repoEmailInput = document.getElementById('Email');
 
   const repoLink = document.getElementById('repoLink');
-  const repoDisplayName = document.getElementById('repoDisplayName'); // You need to add this to HTML if you want to show name
+  const repoDisplayName = document.getElementById('repoDisplayName'); // make sure this element exists in HTML
 
   const syncNowBtn = document.getElementById('syncNowBtn');
-  const syncStatus = document.getElementById('syncStatus');
+//   const syncStatus = document.getElementById('syncStatus');
 
-  const lastPlatform = document.getElementById('lastPlatform');
-  const lastTitle = document.getElementById('lastTitle');
-  const lastCommitMsg = document.getElementById('lastCommitMsg');
+  // const lastPlatform = document.getElementById('lastPlatform'); // commented out
+  // const lastTitle = document.getElementById('lastTitle');       // commented out
+  // const lastCommitMsg = document.getElementById('lastCommitMsg'); // commented out
 
-  chrome.storage.local.get(['repoInfo', 'lastSubmission'], ({ repoInfo, lastSubmission }) => {
+  chrome.storage.local.get(['repoInfo'/*, 'lastSubmission'*/], ({ repoInfo /*, lastSubmission*/ }) => {
     if (!repoInfo || !repoInfo.githuburl) {
       repoSetupDiv.classList.remove('hidden');
       repoInfoDiv.classList.add('hidden');
-      lastSubmissionDiv.classList.add('hidden');
+      // lastSubmissionDiv.classList.add('hidden'); // commented out
     } else {
       showRepoInfo(repoInfo);
-      showLastSubmission(lastSubmission);
+      // showLastSubmission(lastSubmission); // commented out
     }
   });
 
@@ -38,63 +38,60 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     const name = repoDisplayNameInput.value.trim() || url;
 
-   const email = repoEmailInput.value.trim();
-if (!email) {
-  alert('Please enter your email.');
-  return;
-}
+    const email = repoEmailInput.value.trim();
+    if (!email) {
+      alert('Please enter your email.');
+      return;
+    }
 
-const payload = {
-  githuburl: url,
-  name: name,
-  email: email
-};
+    const payload = {
+      githuburl: url,
+      name: name,
+      email: email
+    };
 
-try {
-  const res = await fetch('http://localhost:8080/auth/register', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
-  });
-  if (!res.ok) throw new Error('Failed to save repo info');
-  const data = await res.json();
+    try {
+      const res = await fetch('http://localhost:8080/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok) throw new Error('Failed to save repo info');
+      const data = await res.json();
 
-  chrome.storage.local.set({
-    repoInfo: data,
-    userId: data.id
-  }, () => {
-    showRepoInfo(data);
-  });
-} catch (err) {
-  console.error(err);
-  alert('Failed to save repository info. Check console.');
-}
-
+      chrome.storage.local.set({
+        repoInfo: data,
+        userId: data.id
+      }, () => {
+        showRepoInfo(data);
+      });
+    } catch (err) {
+      console.error(err);
+      alert('Failed to save repository info. Check console.');
+    }
   });
 
   function showRepoInfo(repoInfo) {
     repoSetupDiv.classList.add('hidden');
     repoInfoDiv.classList.remove('hidden');
-    lastSubmissionDiv.classList.remove('hidden');
+    // lastSubmissionDiv.classList.remove('hidden'); // commented out
 
-    // Use repoInfo.name (your display name) and githuburl
-    // Make sure to add element with id="repoDisplayName" inside repoInfo div for this to work
     if (repoDisplayName) repoDisplayName.textContent = repoInfo.name || 'No Display Name';
     if (repoLink) repoLink.href = repoInfo.githuburl;
 
-    syncStatus.textContent = 'Last sync: --';
+    // syncStatus.textContent = 'Last sync: --';
   }
 
-  function showLastSubmission(submission) {
-    if (!submission) {
-      lastSubmissionDiv.style.display = 'none';
-      return;
-    }
-    lastSubmissionDiv.style.display = 'block';
-    lastPlatform.textContent = submission.platform || '--';
-    lastTitle.textContent = submission.title || '--';
-    lastCommitMsg.textContent = submission.commitMessage || '--';
-  }
+  // function showLastSubmission(submission) { // commented out
+  //   if (!submission) {
+  //     lastSubmissionDiv.style.display = 'none';
+  //     return;
+  //   }
+  //   lastSubmissionDiv.style.display = 'block';
+  //   lastPlatform.textContent = submission.platform || '--';
+  //   lastTitle.textContent = submission.title || '--';
+  //   lastCommitMsg.textContent = submission.commitMessage || '--';
+  // }
 
   if(syncNowBtn){
     syncNowBtn.addEventListener('click', () => {
@@ -111,7 +108,7 @@ try {
         })
           .then(res => res.json())
           .then(data => {
-            syncStatus.textContent = 'Last sync: ' + new Date().toLocaleString();
+            // syncStatus.textContent = 'Last sync: ' + new Date().toLocaleString();
             alert('Sync triggered successfully!');
           })
           .catch(err => {
