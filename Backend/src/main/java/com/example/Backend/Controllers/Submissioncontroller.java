@@ -28,11 +28,12 @@ public class Submissioncontroller {
         String platform = request.getPlatform();
         String email = request.getEmail();
         String title=request.getTitle();
+        String language=request.getlanguage();
 //        String repoUrl=request.getRepourl();
         System.out.println("✅✅✅"+request);
         System.out.println("Email😍😍😍😍😍"+email);
         String summary = aiService.summarizeSolution(code);
-        boolean pushed = githubPushService.pushToRepo(email, title, code, summary,platform);
+        boolean pushed = githubPushService.pushToRepo(email, title, code, summary,platform,language);
 
         if (pushed) {
             return "Submission pushed successfully!";

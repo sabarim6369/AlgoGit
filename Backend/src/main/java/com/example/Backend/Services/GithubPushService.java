@@ -22,7 +22,7 @@ public class GithubPushService {
     @Autowired
     private AiService aiService;
 
-    public boolean pushToRepo(String email, String questionTitle, String code, String explanation, String platform) {
+    public boolean pushToRepo(String email, String questionTitle, String code, String explanation, String platform,String language) {
         authmodel data = authrepo.findByEmail(email);
         if (data == null || data.getGithuburl() == null || data.getGithubAccessToken() == null) {
             System.out.println("❌ Missing data for email: " + email);
@@ -50,7 +50,7 @@ public class GithubPushService {
 
             boolean codePush = pushFileToGithub(
                     restTemplate, headers, owner, repo,
-                    folderName + "/solution.java",
+                    folderName + "/solution."+language,
                     "Add solution for: " + questionTitle,
                     code
             );

@@ -40,14 +40,20 @@
 //   }
 // }, 3000);console.log("🚀 LeetCode content script loaded");
 console.log("🚀 LeetCode content script loaded");
+function detectLanguage() {
+  const raw = [...document.querySelectorAll('*')]
+    .find(el => /^(C\+\+|Java|Python|Go|Rust|JavaScript)/.test(el.innerText))?.innerText.trim();
+
+  const match = raw?.match(/^(C\+\+|Java|Python|Go|Rust|JavaScript)/);
+  return match ? match[1] : "Unknown";
+}
 
 function getLeetCodeSubmissionData() {
   const lineElements = Array.from(document.querySelectorAll('.view-line'));
-  
-  // Filter out lines with no text content or empty/duplicate lines
+
   const lines = lineElements
     .map(el => el.innerText.trim())
-    .filter((line, index, self) => line && self.indexOf(line) === index); // remove duplicates
+    .filter((line, index, self) => line && self.indexOf(line) === index);
 
   const code = lines.join('\n').trim();
 
@@ -62,10 +68,17 @@ function getLeetCodeSubmissionData() {
     .map(word => word.charAt(0).toUpperCase() + word.slice(1))
     .join(' ');
 
+  // ✅ Try to detect language
+  
+
+
+
   return {
     platform: 'leetcode',
     title,
-    code
+    code,
+    language:detectLanguage()
+
   };
 }
 
