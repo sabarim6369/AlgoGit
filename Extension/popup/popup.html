@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AlgoGit</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <div id="app">
+    <h2>AlgoGit</h2>
+    <div id="repoSetup" class="hidden">
+      <form id="repoSetupForm">
+        <label for="repoUrl">GitHub Repository URL *</label>
+        <input type="url" id="repoUrl" placeholder="https://github.com/username/repo.git" required />
+        <label for="repoName">Display Name (optional)</label>
+        <input type="text" id="repoName" placeholder="My LeetCode Solutions" />
+        <button type="submit">Connect Repo</button>
+      </form>
+    </div>
+
+    <div id="repoInfo" class="hidden">
+      <p>
+        Connected to repo: <strong id="repoDisplayName"></strong><br />
+        <a id="repoLink" href="#" target="_blank" rel="noopener noreferrer">View on GitHub</a>
+      </p>
+      <button id="syncNowBtn">Sync Now</button>
+      <p id="syncStatus">Last sync: --</p>
+    </div>
+
+    <div id="lastSubmission" class="hidden">
+      <h3>Last Submission</h3>
+      <p><strong>Platform:</strong> <span id="lastPlatform"></span></p>
+      <p><strong>Problem:</strong> <span id="lastTitle"></span></p>
+      <p><strong>Commit Message:</strong> <span id="lastCommitMsg"></span></p>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
