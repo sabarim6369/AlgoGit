@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Streak Tracker</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f9f9f9;
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .tracker-container {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      padding: 24px;
+      width: 320px;
+      text-align: center;
+    }
+
+    .streak-title {
+      font-size: 20px;
+      font-weight: bold;
+    }
+
+    .sub-text {
+      color: #666;
+      font-size: 14px;
+      margin-bottom: 16px;
+    }
+
+    .day-status {
+      display: flex;
+      justify-content: space-between;
+      margin: 16px 0;
+    }
+
+    .day {
+      width: 40px;
+      height: 40px;
+      background: #f0f0f0;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-weight: bold;
+    }
+
+    .day.done {
+      background: #fcd34d; /* Yellow */
+    }
+
+    .day.missed {
+      background: #e5e7eb; /* Gray */
+    }
+
+    .day.upcoming {
+      background: #fafafa;
+    }
+
+    .chart {
+      margin: 16px 0;
+    }
+
+    .stats {
+      display: flex;
+      justify-content: space-around;
+      font-size: 14px;
+      margin-top: 10px;
+    }
+
+    .stats div {
+      text-align: center;
+    }
+
+    .total-count {
+      font-size: 28px;
+      font-weight: bold;
+      margin: 10px 0;
+    }
+
+    .footer {
+      font-size: 12px;
+      color: #777;
+      margin-top: 20px;
+    }
+
+    .footer a {
+      color: #007bff;
+      text-decoration: none;
+    }
+
+    .footer a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="tracker-container">
+    <div class="streak-title">2 day streak!</div>
+    <div class="sub-text">Do one more, and keep up the streak!</div>
+
+    <div class="day-status">
+      <div class="day done">M</div>
+      <div class="day missed">T</div>
+      <div class="day done">W</div>
+      <div class="day done">T</div>
+      <div class="day upcoming">F</div>
+    </div>
+
+    <div class="chart">
+      <img src="/mnt/data/7060030d-1cd2-4083-ada7-f0ff44ea615a.png" alt="Chart" style="width: 100%; border-radius: 10px;">
+    </div>
+
+    <div class="total-count">Total 34</div>
+    <div class="stats">
+      <div><strong>Easy</strong><br>8</div>
+      <div><strong>Medium</strong><br>22</div>
+      <div><strong>Hard</strong><br>4</div>
+    </div>
+
+    <div class="footer">
+      Having Issues? <a href="#">Report Bug</a> | Made with ❤️ by <a href="https://github.com/3ba2ii">@3ba2ii</a>
+    </div>
+  </div>
+</body>
+</html>

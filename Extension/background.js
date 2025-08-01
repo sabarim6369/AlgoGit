@@ -1,6 +1,6 @@
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === 'submission') {
-    chrome.storage.local.get(['repoInfo'], ({ repoInfo }) => {
+    chrome.storage.local.get(['repoInfo'], ({ repoInfo,userEmail  }) => {
       if (!repoInfo || !repoInfo.repoUrl) {
         console.warn('GitHub repo not configured');
         return;
@@ -9,10 +9,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       const submissionData = {
         ...message.data,
         repoUrl: repoInfo.repoUrl,
-        repoName: repoInfo.repoName || ''
+        repoName: repoInfo.repoName || '',
+                email: userEmail || repoInfo.email || ''  // use stored email
+
       };
 
-      fetch('http://localhost:8080/api/submission', {
+      fetch('http://localhost:8080/submission/submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(submissionData)

@@ -22,6 +22,7 @@ let lastSentTitle = null;
 
 setInterval(() => {
   const submission = getLeetCodeSubmissionData();
+  console.log('Checking for new submission data:', submission)
   if (submission && submission.title !== lastSentTitle) {
     sendSubmissionToBackground(submission);
     lastSentTitle = submission.title;
