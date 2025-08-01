@@ -1,8 +1,9 @@
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  console.log("🔔 Message received in **background** script ✅✅✅", message);
   if (message.action === 'submission') {
-    chrome.storage.local.get(['repoInfo'], ({ repoInfo,userEmail  }) => {
+    chrome.storage.local.get(['repoInfo', 'userEmail'], ({ repoInfo, userEmail }) => {
       if (!repoInfo || !repoInfo.repoUrl) {
-        console.warn('GitHub repo not configured');
+        console.warn('❌ GitHub repo not configured');
         return;
       }
 
@@ -10,7 +11,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         ...message.data,
         repoUrl: repoInfo.repoUrl,
         repoName: repoInfo.repoName || '',
-        email: userEmail || repoInfo.email || '' 
+        email: userEmail || repoInfo.email || ''
       };
 
       fetch('http://localhost:8080/submission/submit', {
@@ -20,9 +21,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       })
         .then(res => res.json())
         .then(response => {
-          console.log('Backend response:', response);
+          console.log('✅ Backend response:', response);
           chrome.storage.local.set({ lastSubmission: response });
-          // Optionally notify user on successful push
+
           chrome.notifications.create({
             type: 'basic',
             iconUrl: 'icons/icon48.png',
@@ -31,7 +32,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             priority: 2
           });
         })
-        .catch(err => console.error('Error sending submission:', err));
+        .catch(err => console.error('❌ Error sending submission:', err));
     });
   }
 });
