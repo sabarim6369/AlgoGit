@@ -205,7 +205,6 @@
 //     });
 //   });
 // });
-
 document.addEventListener('DOMContentLoaded', () => {
   const githubLoginBtn = document.getElementById("githubLogin");
   const repoSetupDiv = document.getElementById('repoSetup');
@@ -238,7 +237,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const name = repoDisplayNameInput.value.trim();
 
     if (!email || !githuburl || !name) {
-      alert("Please fill all fields before login.");
+      showToast("Please fill all fields before login.");
       return;
     }
 
@@ -273,12 +272,12 @@ document.addEventListener('DOMContentLoaded', () => {
           };
 
           chrome.storage.local.set({ repoInfo }, () => {
-            alert("✅ Authentication complete! Redirecting...");
+            showToast("✅ Authentication complete! Redirecting...");
             showRepoInfo(repoInfo);
           });
         }).catch(err => {
           console.error("❌ GitHub token exchange failed", err);
-          alert("Authentication failed.");
+          showToast("Authentication failed.");
         });
     });
   });
@@ -295,10 +294,34 @@ document.addEventListener('DOMContentLoaded', () => {
   if (logoutBtn) {
     logoutBtn.addEventListener('click', () => {
       chrome.storage.local.clear(() => {
-        alert("Logged out.");
+        showToast("Logged out.");
         repoSetupDiv.classList.remove('hidden');
         repoInfoDiv.classList.add('hidden');
       });
     });
   }
 });
+function showToast(message, type = 'success') {
+  const toastContainer = document.getElementById('toastContainer');
+
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+
+  // Add message text
+  toast.textContent = message;
+
+  // Create and add close button
+  const closeBtn = document.createElement('button');
+  closeBtn.innerHTML = '&times;';
+  closeBtn.className = 'close-btn';
+  closeBtn.onclick = () => toast.remove();
+
+  toast.appendChild(closeBtn);
+  toastContainer.appendChild(toast);
+
+  // Auto-remove after 4s if not manually closed
+  setTimeout(() => {
+    if (toast.parentElement) toast.remove();
+  }, 4000);
+}
+
