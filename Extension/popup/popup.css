@@ -137,20 +137,34 @@ button:hover {
   align-items: center;
   margin-bottom: 16px;
 }
-
-.platform-filter select {
-  padding: 6px 12px;
-  border-radius: 8px;
-  font-size: 13px;
-  border: 1px solid #ccc;
-  background-color: #f0f0f0;
-  color: #333;
-  outline: none;
-  transition: border 0.2s ease;
+.platform-filter {
+  display: flex;
+  justify-content: flex-end;
+  margin: 12px 0;
+  padding: 0 10px;
 }
 
-.platform-filter select:hover {
-  border-color: #888;
+.platform-filter select {
+  padding: 8px 14px;
+  border-radius: 10px;
+  font-size: 14px;
+  border: 1px solid #d0d7de;
+  background-color: #fdfdfd;
+  color: #24292f;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+  cursor: pointer;
+  appearance: none; /* removes default arrow in some browsers */
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 140 140' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath fill='%23999' d='M70 90L20 40h100z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 10px;
+}
+
+.platform-filter select:hover,
+.platform-filter select:focus {
+  border-color: #4a90e2;
+  box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
 }
 
 /* Logout Icon */
@@ -198,54 +212,53 @@ button:hover {
   display: inline-block;
   box-shadow: 0 4px 10px rgba(0, 123, 255, 0.25);
 }
-
-/* Streak Section */
 .streak-section {
-  margin: 24px 0;
-  text-align: center;
+  margin-top: 20px;
 }
 
 .streak-section h4 {
+  text-align: center;
   font-size: 16px;
-  font-weight: 600;
-  margin-bottom: 12px;
-  color: #333;
+  color: #2c3e50;
+  margin-bottom: 10px;
 }
 
 .streak-bar {
   display: flex;
-  justify-content: center;
-  gap: 10px;
-  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 0 10px;
 }
 
 .day-pill {
-  padding: 6px 12px;
-  border-radius: 20px;
-  font-size: 13px;
-  font-weight: 600;
-  min-width: 40px;
-  text-align: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: bold;
+  font-size: 14px;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.08);
   transition: transform 0.2s ease;
-  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.08);
 }
 
 .day-pill:hover {
-  transform: scale(1.1);
+  transform: scale(1.05);
 }
 
 .day-pill.filled {
-  background-color: #c8f7c5;
+  background: #c8f7c5;
   color: #256029;
 }
 
 .day-pill.missed {
-  background-color: #ffe0e0;
+  background: #ffcccc;
   color: #8b0000;
 }
 
 .day-pill.upcoming {
-  background-color: #e3e3e3;
+  background: #e3e3e3;
   color: #777;
 }
 
@@ -397,4 +410,53 @@ button:hover {
     opacity: 0;
     transform: translateY(-10px);
   }
+}
+.connected-badge {
+  font-size: 0.9rem;
+  color: green;
+  margin-left: 8px;
+}
+.popup-box {
+  position: fixed;
+  top: 100px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: white;
+  border: 1px solid #ccc;
+  padding: 16px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  border-radius: 8px;
+  width: 200px;
+}
+
+.popup-box.hidden {
+  display: none;
+}
+
+.popup-box label {
+  font-size: 14px;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.popup-box input {
+  width: 80%;
+  padding: 6px 10px;
+  font-size: 14px;
+  margin-bottom: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.popup-box button {
+  background: #2ea44f;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.gitimg1:hover{
+  cursor: pointer;
 }

@@ -47,6 +47,11 @@ function detectLanguage() {
   const match = raw?.match(/^(C\+\+|Java|Python|Go|Rust|JavaScript)/);
   return match ? match[1] : "Unknown";
 }
+function detectDifficulty() {
+  const el = Array.from(document.querySelectorAll('*'))
+    .find(el => el.textContent.trim().match(/^(Easy|Medium|Hard)$/i));
+  return el ? el.textContent.trim() : 'Unknown';
+}
 
 function getLeetCodeSubmissionData() {
   const lineElements = Array.from(document.querySelectorAll('.view-line'));
@@ -68,8 +73,7 @@ function getLeetCodeSubmissionData() {
     .map(word => word.charAt(0).toUpperCase() + word.slice(1))
     .join(' ');
 
-  // ✅ Try to detect language
-  
+    
 
 
 
@@ -77,7 +81,9 @@ function getLeetCodeSubmissionData() {
     platform: 'leetcode',
     title,
     code,
-    language:detectLanguage()
+    language:detectLanguage(),
+    difficulty: detectDifficulty()
+
 
   };
 }

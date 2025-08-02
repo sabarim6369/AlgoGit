@@ -7,6 +7,7 @@ public class SubmissionRequest {
     private String repoUrl;
     private String title;
     private String language;
+    private String difficulty;
 
     // Getters and setters
     public String getEmail() { return email; }
@@ -38,5 +39,13 @@ public class SubmissionRequest {
 
     public void getlanguage(String language) {
         this.language = language;
+    }
+
+    public String getDifficulty() {
+        return difficulty;
+    }
+
+    public void setDifficulty(String difficulty) {
+        this.difficulty = difficulty;
     }
 }
