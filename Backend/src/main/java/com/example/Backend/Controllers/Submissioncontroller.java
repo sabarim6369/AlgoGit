@@ -38,6 +38,12 @@ public class Submissioncontroller {
         String title = request.getTitle();
         String language = request.getlanguage();
         String difficulty=request.getDifficulty();
+        String status=request.getStatus();
+        if ("Wrong Answer".equalsIgnoreCase(status)) {
+            return "Skipped wrong answer";
+        }
+
+
 
         System.out.println("✅✅✅" + request);
         System.out.println("Email😍😍😍😍😍" + email);

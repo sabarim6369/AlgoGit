@@ -8,6 +8,7 @@ public class SubmissionRequest {
     private String title;
     private String language;
     private String difficulty;
+    private String status;
 
     // Getters and setters
     public String getEmail() { return email; }
@@ -47,5 +48,13 @@ public class SubmissionRequest {
 
     public void setDifficulty(String difficulty) {
         this.difficulty = difficulty;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 }

@@ -460,3 +460,62 @@ button:hover {
 .gitimg1:hover{
   cursor: pointer;
 }
+.welcome-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+  color: #f4f4f4;
+  padding: 30px;
+  text-align: center;
+  animation: fadeIn 1s ease-in;
+}
+
+.welcome-page h1 {
+  font-size: 2.2rem;
+  margin-bottom: 12px;
+  font-weight: bold;
+  color: #ffffff;
+}
+
+.welcome-page .brand {
+  color: #58a6ff;
+  font-weight: 700;
+}
+
+.welcome-page .tagline {
+  font-size: 1.1rem;
+  color: #d1d5db;
+  margin-bottom: 30px;
+  max-width: 400px;
+}
+
+.enter-btn {
+  background: #58a6ff;
+  color: white;
+  padding: 12px 28px;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  transition: background 0.3s, transform 0.2s;
+}
+
+.enter-btn:hover {
+  background: #1f6feb;
+  transform: translateY(-2px);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}

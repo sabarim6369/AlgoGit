@@ -1,44 +1,4 @@
-// console.log("🚀 LeetCode content script loaded");
 
-// function getLeetCodeSubmissionData() {
-//   const codeBlock = document.querySelector('pre');
-//   if (!codeBlock) {
-//     console.log("❌ Code block not found");
-//     return null;
-//   }
-
-//   const code = codeBlock.innerText.trim();
-
-//   // Extract title from URL
-//   const slug = location.pathname.split('/')[2]; // e.g., "two-sum"
-//   const title = slug
-//     .split('-')
-//     .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-//     .join(' '); // → "Two Sum"
-
-//   return {
-//     platform: 'leetcode',
-//     title: title,
-//     code: code
-//   };
-// }
-
-// function sendSubmissionToBackground(data) {
-//     console.log("📤 Sending submission to background:🤣🤣🤣🤣🤣", data);
-//   chrome.runtime.sendMessage({ action: 'submission', data });
-// }
-
-// let lastSentTitle = null;
-
-// setInterval(async() => {
-//   const submission =await getLeetCodeSubmissionData();
-//   console.log('🔄 Checking submission:', submission);
-
-//   if (submission && submission.title !== lastSentTitle) {
-//     sendSubmissionToBackground(submission);
-//     lastSentTitle = submission.title;
-//   }
-// }, 3000);console.log("🚀 LeetCode content script loaded");
 console.log("🚀 LeetCode content script loaded");
 function detectLanguage() {
   const raw = [...document.querySelectorAll('*')]

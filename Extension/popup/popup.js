@@ -1,3 +1,5 @@
+// const apiurl="https://algogitbackend.onrender.com"
+const apiurl="http://localhost:8080"
 
 let globalProblemStats = null;
 
@@ -58,7 +60,7 @@ async function fetchAndDisplayProblemStats() {
 
   try {
     console.log("🙏🙏🙏🙏🙏",repoInfo.email)
-    const response = await fetch('http://localhost:8080/problems/getcounts', {
+    const response = await fetch(`${apiurl}/problems/getcounts`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -77,9 +79,30 @@ async function fetchAndDisplayProblemStats() {
 
 document.addEventListener('DOMContentLoaded', () => {
   const githubLoginBtn = document.getElementById("githubLogin");
+    const welcomePage = document.getElementById("welcomePage");
   const repoSetupDiv = document.getElementById('repoSetup');
   const repoInfoDiv = document.getElementById('repoInfo');
+  chrome.storage.local.get(['repoInfo'], ({ repoInfo }) => {
+  if (repoInfo && repoInfo.githubAccessToken) {
+    showRepoInfo(repoInfo);
+    welcomePage.style.display = "none";
+   
+  } else {
+    welcomePage.style.display = "block";
+    repoSetupDiv.style.display = "none";
+  }
+});
 
+
+welcomePage.style.display="block";
+repoSetupDiv.style.display="none";
+const enterAppBtn=document.getElementById("enterAppBtn");
+enterAppBtn.addEventListener('click', () => {
+  welcomePage.style.display="none";
+  repoSetupDiv.style.display="block";
+
+
+})
   const repoUrlInput = document.getElementById("repoUrl");
   const repoEmailInput = document.getElementById("Email");
   const repoDisplayNameInput = document.getElementById("username");
@@ -112,9 +135,9 @@ document.addEventListener('DOMContentLoaded', () => {
       // Update locally
       repoInfo.githuburl = newUrl;
 
-      // Call backend API to update
       try {
-        const response = await fetch('http://localhost:8080/auth/update-url', {
+        // http://localhost:8080 ->local
+        const response = await fetch(`${apiurl}/auth/update-url`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
@@ -171,13 +194,15 @@ document.getElementById('platformSelect').addEventListener('change', (e) => {
     const email = repoEmailInput.value.trim();
     const githuburl = repoUrlInput.value.trim();
     const name = repoDisplayNameInput.value.trim();
-
     if (!email || !githuburl || !name) {
       showToast("Please fill all fields before login.");
       return;
     }
 
-    const authUrl = `https://github.com/login/oauth/authorize?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=repo`;
+    // const authUrl = `https://github.com/login/oauth/authorize?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=repo`;
+const state = Math.random().toString(36).substring(2);
+const authUrl = `https://github.com/login/oauth/authorize?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=repo&state=${state}&prompt=consent`;
+
 
     chrome.identity.launchWebAuthFlow({
       url: authUrl,
@@ -192,7 +217,7 @@ document.getElementById('platformSelect').addEventListener('change', (e) => {
       const code = url.searchParams.get("code");
       console.log("GitHub code received:", code);
 
-      fetch("http://localhost:8080/auth/github/exchange-code", {
+      fetch(`${apiurl}/auth/github/exchange-code`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ code, email, name, githuburl }),
@@ -209,6 +234,7 @@ document.getElementById('platformSelect').addEventListener('change', (e) => {
 
           chrome.storage.local.set({ repoInfo }, () => {
             showToast("✅ Authentication complete! Redirecting...");
+      repoSetupDiv.style.display = "none";
             showRepoInfo(repoInfo);
           });
         }).catch(err => {
@@ -226,13 +252,13 @@ document.getElementById('platformSelect').addEventListener('change', (e) => {
     if (repoLink) repoLink.href = repoInfo.githuburl;
   }
 
-  // Optional logout handler
   if (logoutBtn) {
     logoutBtn.addEventListener('click', () => {
       chrome.storage.local.clear(() => {
         showToast("Logged out.");
         repoSetupDiv.classList.remove('hidden');
         repoInfoDiv.classList.add('hidden');
+            welcomePage.style.display = "block";
       });
     });
   }

@@ -9,7 +9,7 @@ import java.util.*;
 @Service
 public class AiService {
 
-    private static final String API_KEY = "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";
+    private static final String API_KEY = "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";
     private static final String API_URL = "https://api.groq.com/openai/v1/chat/completions";
 
     public String summarizeSolution(String code) {
