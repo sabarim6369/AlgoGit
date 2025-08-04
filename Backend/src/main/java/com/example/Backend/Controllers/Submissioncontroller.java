@@ -2,8 +2,10 @@ package com.example.Backend.Controllers;
 
 import com.example.Backend.Models.Submissionmodel;
 import com.example.Backend.Models.problemsmodel;
+import com.example.Backend.Models.streakmodel;
 import com.example.Backend.Repositories.Authrepo;
 import com.example.Backend.Repositories.Problemsrepo;
+import com.example.Backend.Repositories.Streakrepo;
 import com.example.Backend.Repositories.Submissionrepo;
 import com.example.Backend.Services.AiService;
 import com.example.Backend.Services.GithubPushService;
@@ -14,6 +16,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import com.example.Backend.Dto.SubmissionRequest;
+
+import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -30,6 +35,8 @@ public class Submissioncontroller {
     private Problemsrepo problemsrepo;
     @Autowired
     private Authrepo authrepo;
+    @Autowired
+    private Streakrepo streakrepo;
     @PostMapping("/submit")
     public String submit(@RequestBody SubmissionRequest request) {
         String code = request.getCode();
@@ -37,13 +44,12 @@ public class Submissioncontroller {
         String email = request.getEmail();
         String title = request.getTitle();
         String language = request.getlanguage();
-        String difficulty=request.getDifficulty();
-        String status=request.getStatus();
+        String difficulty = request.getDifficulty();
+        String status = request.getStatus();
+
         if ("Wrong Answer".equalsIgnoreCase(status)) {
             return "Skipped wrong answer";
         }
-
-
 
         System.out.println("✅✅✅" + request);
         System.out.println("Email😍😍😍😍😍" + email);
@@ -52,22 +58,57 @@ public class Submissioncontroller {
         boolean pushed = githubPushService.pushToRepo(email, title, code, summary, platform, language);
 
         if (pushed) {
-            // 🔍 Get user by email
             var user = authrepo.findByEmail(email);
             if (user != null) {
                 Long refId = user.getId();
 
-                // 📈 Fetch or create problemsmodel entry
-                Optional<problemsmodel> problemsModelOpt = problemsrepo.findByReferenceid(refId);
-                problemsmodel model;
-                if (problemsModelOpt.isPresent()) {
-                    model = problemsModelOpt.get();
-                } else {
-                    model = new problemsmodel();
-                    model.setReferenceid(refId);
+                // 🔥 Streak tracking logic
+                streakmodel streak = streakrepo.findByReferenceid(refId).orElseGet(() -> {
+                    streakmodel s = new streakmodel();
+                    s.setReferenceid(refId);
+                    return s;
+                });
+
+                LocalDate today = LocalDate.now();
+                DayOfWeek dow = today.getDayOfWeek();
+
+                switch (dow) {
+                    case MONDAY -> streak.setMonday(true);
+                    case TUESDAY -> streak.setTuesday(true);
+                    case WEDNESDAY -> streak.setWednesday(true);
+                    case THURSDAY -> streak.setThursday(true);
+                    case FRIDAY -> streak.setFriday(true);
+                    case SATURDAY -> streak.setSaturday(true);
+                    case SUNDAY -> streak.setSunday(true);
                 }
 
-                // 🎯 Update count based on platform
+                LocalDate last = streak.getLastSolvedDate();
+
+                if (last != null) {
+                    if (last.plusDays(1).equals(today)) {
+                        streak.setCurrentStreak(streak.getCurrentStreak() + 1);
+                    } else if (!last.equals(today)) {
+                        streak.setCurrentStreak(1);
+                    }
+                } else {
+                    streak.setCurrentStreak(1);
+                }
+
+                if (streak.getCurrentStreak() > streak.getLongestStreak()) {
+                    streak.setLongestStreak(streak.getCurrentStreak());
+                }
+
+                streak.setLastSolvedDate(today);
+                streakrepo.save(streak);
+
+                // 🎯 Problem count update
+                Optional<problemsmodel> problemsModelOpt = problemsrepo.findByReferenceid(refId);
+                problemsmodel model = problemsModelOpt.orElseGet(() -> {
+                    problemsmodel m = new problemsmodel();
+                    m.setReferenceid(refId);
+                    return m;
+                });
+
                 switch (platform.toLowerCase()) {
                     case "leetcode" -> {
                         model.setLeetcodecount(model.getLeetcodecount() + 1);
@@ -104,7 +145,6 @@ public class Submissioncontroller {
                     default -> System.out.println("⚠️ Unknown platform: " + platform);
                 }
 
-
                 problemsrepo.save(model);
             }
 
@@ -113,6 +153,7 @@ public class Submissioncontroller {
             return "Failed to push submission.";
         }
     }
+
 
 
 }

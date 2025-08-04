@@ -107,16 +107,29 @@
   </div>
 
  <div class="streak-section">
-  <h4>🔥 Streak Progress</h4>
-  <div class="streak-bar">
-    <div class="day-pill filled">S</div>
-    <div class="day-pill filled">M</div>
-    <div class="day-pill missed">T</div>
-    <div class="day-pill filled">W</div>
-    <div class="day-pill filled">T</div>
-    <div class="day-pill upcoming">F</div>
-    <div class="day-pill upcoming">S</div>
+  <h4>Streak Progress</h4>
+<div class="streak-bar">
+  <div class="streak-item">
+    <span class="icon">🔥</span>
+    <span class="label">Current</span>
+    <span class="value streak-current-value">0</span>
   </div>
+  <div class="streak-item">
+    <span class="icon">🏆</span>
+    <span class="label">Longest</span>
+    <span class="value streak-longest-value">0</span>
+  </div>
+</div>
+
+<div class="streak-days">
+  <div class="day-box" data-day="monday">M</div>
+  <div class="day-box" data-day="tuesday">T</div>
+  <div class="day-box" data-day="wednesday">W</div>
+  <div class="day-box" data-day="thursday">T</div>
+  <div class="day-box" data-day="friday">F</div>
+  <div class="day-box" data-day="saturday">S</div>
+  <div class="day-box" data-day="sunday">S</div>
+</div>
 </div>
 
 
@@ -147,7 +160,7 @@
 <div id="githubPopup" class="popup-box hidden">
   <label for="editGithubUrl">GitHub Repository URL</label>
   <input type="url" id="editGithubUrl" placeholder="https://github.com/username/repo.git" />
-  <button id="saveGithubUrl">Save</button>
+  <button id="saveGithubUrl">Save</button><br>
 </div>
 
 

@@ -75,6 +75,40 @@ async function fetchAndDisplayProblemStats() {
     console.error('❌ Error fetching problem stats:', err);
   }
 }
+async function getstreaks() {
+  const { repoInfo } = await chrome.storage.local.get(['repoInfo']);
+  if (!repoInfo || !repoInfo.email) return;
+
+  try {
+    const response = await fetch(`${apiurl}/streak/getstreak`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: repoInfo.email })
+    });
+
+    const data = await response.json();
+    console.log('✅ Streaks:', data);
+
+ document.querySelector('.streak-current-value').textContent = data.currentStreak;
+document.querySelector('.streak-longest-value').textContent = data.longestStreak;
+
+    // Optional: update daily streak boxes
+    const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+    days.forEach(day => {
+      const el = document.querySelector(`.day-box[data-day="${day}"]`);
+      if (el) {
+        if (data[day]) {
+          el.classList.add('filled');  // 🔥 mark active
+        } else {
+          el.classList.remove('filled');
+        }
+      }
+    });
+
+  } catch (err) {
+    console.error('❌ Error fetching streaks:', err);
+  }
+}
 
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -122,7 +156,7 @@ enterAppBtn.addEventListener('click', () => {
     }
     githubPopup.classList.remove('hidden');
   });
-
+getstreaks()
  saveBtn.addEventListener('click', async () => {
   const newUrl = githubUrlInput.value.trim();
   if (!newUrl) {

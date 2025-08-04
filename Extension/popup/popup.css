@@ -519,3 +519,56 @@ button:hover {
     transform: scale(1);
   }
 }
+.streak-days {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  padding: 10px;
+  background: #f3f4f6;
+  border-radius: 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.day-box {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background-color: #e5e7eb;
+  color: #374151;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.3s ease, color 0.3s ease;
+  font-size: 14px;
+  border: none;
+}
+
+.day-box.filled {
+  background-color: #10b981; /* green */
+  color: white;
+}
+
+.streak-bar {
+  display: flex;
+  justify-content: space-around;
+  background: #fef3c7;
+  padding: 10px;
+  border-radius: 10px;
+  margin-bottom: 10px;
+}
+
+.streak-item {
+  text-align: center;
+  font-size: 14px;
+}
+
+.streak-item .icon {
+  font-size: 18px;
+  display: block;
+}
+
+.streak-item .value {
+  font-weight: bold;
+  font-size: 16px;
+}
