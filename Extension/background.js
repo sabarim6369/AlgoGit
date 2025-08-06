@@ -17,8 +17,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       };
       console.log('📝 Submission data:', submissionData);
 
-      // fetch(`https://algogitbackend.onrender.com/submission/submit`, {
-      fetch(`http://localhost:8080/submission/submit`, {
+      fetch(`https://algogitbackend.onrender.com/submission/submit`, {
+      // fetch(`http://localhost:8080/submission/submit`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(submissionData)
