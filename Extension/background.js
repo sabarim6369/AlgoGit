@@ -1,7 +1,7 @@
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   console.log("🔔 Message received in **background** script ✅✅✅", message);
-
+console.log(chrome.identity.getRedirectURL());
   if (message.action === 'submission') {
     chrome.storage.local.get(['repoInfo', 'userEmail'], ({ repoInfo, userEmail }) => {
       if (!repoInfo || !repoInfo.githuburl) {
@@ -17,21 +17,28 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       };
       console.log('📝 Submission data:', submissionData);
 
-      fetch(`https://algogitbackend.onrender.com/submission/submit`, {
-      // fetch(`http://localhost:8080/submission/submit`, {
+      fetch(`http://localhost:8080/submission/submit`, {
+      // fetch(`https://algogitbackend.onrender.com/submission/submit`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(submissionData)
       })
-        .then(res => res.json())
+        .then(async res => {
+          const text = await res.text();
+          try {
+            return JSON.parse(text);
+          } catch {
+            return { message: text };
+          }
+        })
         .then(response => {
           console.log('✅ Backend response:', response);
           chrome.storage.local.set({ lastSubmission: response });
 
           chrome.notifications.create({
             type: 'basic',
-            iconUrl: 'icons/icon48.png',
-            title: 'LeetSync+',
+            iconUrl: 'icons/AlgoGit.png',
+            title: 'AlgoGit',
             message: `Solution "${submissionData.title}" synced successfully!`,
             priority: 2
           });

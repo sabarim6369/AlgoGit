@@ -9,7 +9,7 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
-                .allowedOrigins("chrome-extension://cdlhoniahlpalcemeddmkmloeiejomie")  // your extension ID here
+                .allowedOriginPatterns("chrome-extension://*")  // allow extension requests
                 .allowedMethods("*")
                 .allowedHeaders("*");
     }

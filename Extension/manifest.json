@@ -29,10 +29,11 @@
   }
   ],
    "host_permissions": [
-    "https://github.com/*"
+    "https://github.com/*",
+    "http://localhost:8080/*"
   ],
     "oauth2": {
-    "client_id": "Ov23liMfOlf2emj68SBT",
+    "client_id": "Ov23liCr0aoMWOhjQht2",
     "scopes": ["repo"]
   }
 }

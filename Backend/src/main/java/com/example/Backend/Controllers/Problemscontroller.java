@@ -22,32 +22,46 @@ public class Problemscontroller {
 
     @PostMapping("/getproblems")
     public problemsmodel getProblemsByEmail(@RequestParam String email) {
+        if (email != null) {
+            email = email.trim().toLowerCase();
+        }
         authmodel auth = authrepo.findByEmail(email);
 
         if (auth == null) {
-            throw new RuntimeException("User not found for email: " + email);
+            return new problemsmodel();
         }
 
         Long referenceId = auth.getId();
 
         return problemsrepo.findByReferenceid(referenceId)
-                .orElseThrow(() -> new RuntimeException("No problem stats found for user"));
+                .orElseGet(() -> {
+                    problemsmodel p = new problemsmodel();
+                    p.setReferenceid(referenceId);
+                    return problemsrepo.save(p);
+                });
     }
+
     @PostMapping("/getcounts")
     public problemsmodel getproblemscount(@RequestBody Map<String, String> payload){
         String email = payload.get("email");
+        if (email != null) {
+            email = email.trim().toLowerCase();
+        }
         authmodel user = authrepo.findByEmail(email);
         System.out.println(user);
         if (user == null) {
-            throw new RuntimeException("User not found for email: " + email);
+            return new problemsmodel();
         }
 
         Long refId = user.getId();
 
         // 🔍 Get problem stats using reference ID
-        Optional<problemsmodel> statsOpt = problemsrepo.findByReferenceid(refId);
-        return statsOpt.orElseThrow(() -> new RuntimeException("No stats found for this user"));
-
+        return problemsrepo.findByReferenceid(refId)
+                .orElseGet(() -> {
+                    problemsmodel p = new problemsmodel();
+                    p.setReferenceid(refId);
+                    return problemsrepo.save(p);
+                });
     }
 
 }
