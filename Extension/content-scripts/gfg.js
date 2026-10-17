@@ -1,16 +1,37 @@
+// ==============================================================================
+// AlgoGit - GeeksforGeeks (GFG) Content Script
+// Description: Runs on GFG problem pages to capture code submissions,
+//              detect programming language and problem difficulty, observe the
+//              DOM for execution results (e.g., Correct Answer, Wrong Answer),
+//              and dispatch submission data to the background service worker.
+// ==============================================================================
+
 console.log("🚀 GeeksforGeeks content script loaded");
 
+// ------------------------------------------------------------------------------
+// SECTION 1: Language Detection
+// Extracts selected language from GFG language dropdown/selector
+// ------------------------------------------------------------------------------
 function detectLanguageGFG() {
   const codeLang = document.querySelector('[id^="languageSelector"] option:checked')?.innerText;
   return codeLang || "Unknown";
 }
 
+// ------------------------------------------------------------------------------
+// SECTION 2: Difficulty Detection
+// Scans DOM elements for GFG difficulty label (Easy, Medium, Hard)
+// ------------------------------------------------------------------------------
 function detectDifficultyGFG() {
   const difficultyEl = [...document.querySelectorAll('*')]
     .find(el => el.textContent.match(/Difficulty:\s*(Easy|Medium|Hard)/i));
   const match = difficultyEl?.textContent.match(/Difficulty:\s*(Easy|Medium|Hard)/i);
   return match ? match[1] : "Unknown";
 }
+
+// ------------------------------------------------------------------------------
+// SECTION 3: Code & Problem Metadata Extraction
+// Extracts solution code from Ace editor lines and problem title from URL
+// ------------------------------------------------------------------------------
 function getGFGSubmissionData() {
   const codeEl = document.querySelector('.ace_content') || document.querySelector('code');
   if (!codeEl) {
@@ -37,7 +58,10 @@ function getGFGSubmissionData() {
   };
 }
 
-
+// ------------------------------------------------------------------------------
+// SECTION 4: Background Message Dispatcher
+// Sends extracted GFG submission data to background.js via chrome.runtime.sendMessage
+// ------------------------------------------------------------------------------
 function sendSubmissionToBackground(data) {
   try {
     console.log("📤 Sending GFG submission to background:", data);
@@ -61,6 +85,10 @@ function sendSubmissionToBackground(data) {
   }
 }
 
+// ------------------------------------------------------------------------------
+// SECTION 5: MutationObserver for Submission Results / Verdicts
+// Observes DOM changes after GFG Submit click until verdict appears
+// ------------------------------------------------------------------------------
 let activeGFGResultObserver = null;
 
 function waitForResultWithObserverGFG() {
@@ -114,7 +142,10 @@ function waitForResultWithObserverGFG() {
   }, 60000);
 }
 
-// Global delegated event listener for GFG Submit button
+// ------------------------------------------------------------------------------
+// SECTION 6: Submit Button Click Event Listener (Event Delegation)
+// Listens for clicks on the GFG Submit button and triggers result observer
+// ------------------------------------------------------------------------------
 document.addEventListener('click', (e) => {
   const btn = e.target.closest('button');
   if (btn && /submit/i.test(btn.innerText || '')) {
