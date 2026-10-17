@@ -1,5 +1,18 @@
 
+// ==============================================================================
+// AlgoGit - LeetCode Content Script
+// Description: Runs on LeetCode problem pages to capture code submissions,
+//              detect programming language and problem difficulty, observe the
+//              DOM for execution results (e.g., Accepted, Wrong Answer), and
+//              dispatch submission data to the background service worker.
+// ==============================================================================
+
 console.log("🚀 LeetCode content script loaded");
+
+// ------------------------------------------------------------------------------
+// SECTION 1: Language Detection
+// Extracts programming language from Monaco editor attribute or language button
+// ------------------------------------------------------------------------------
 function detectLanguage() {
   // 1. Check Monaco editor's data-mode-id (e.g., 'cpp', 'java', 'python3', 'sql')
   const monacoEditor = document.querySelector('.monaco-editor[data-mode-id], [data-mode-id]');
@@ -31,12 +44,21 @@ function detectLanguage() {
   const match = raw?.match(exactRegex);
   return match ? match[1] : "Unknown";
 }
+
+// ------------------------------------------------------------------------------
+// SECTION 2: Difficulty Detection
+// Scans DOM text to find problem difficulty badge (Easy, Medium, Hard)
+// ------------------------------------------------------------------------------
 function detectDifficulty() {
   const el = Array.from(document.querySelectorAll('*'))
     .find(el => el.textContent.trim().match(/^(Easy|Medium|Hard)$/i));
   return el ? el.textContent.trim() : 'Unknown';
 }
 
+// ------------------------------------------------------------------------------
+// SECTION 3: Code & Problem Metadata Extraction
+// Extracts solution code from Monaco editor DOM lines and title from page URL
+// ------------------------------------------------------------------------------
 function getLeetCodeSubmissionData() {
   try {
     const lineElements = Array.from(document.querySelectorAll('.view-line'));
@@ -77,6 +99,10 @@ function getLeetCodeSubmissionData() {
   }
 }
 
+// ------------------------------------------------------------------------------
+// SECTION 4: Background Message Dispatcher
+// Sends extracted submission data to background.js via chrome.runtime.sendMessage
+// ------------------------------------------------------------------------------
 function sendSubmissionToBackground(data) {
   try {
     console.log("📤 Sending submission to background:", data);
@@ -100,6 +126,10 @@ function sendSubmissionToBackground(data) {
   }
 }
 
+// ------------------------------------------------------------------------------
+// SECTION 5: MutationObserver for Submission Results / Verdicts
+// Observes DOM changes after Submit click until final result appears
+// ------------------------------------------------------------------------------
 let activeResultObserver = null;
 
 function waitForResultWithObserver() {
@@ -155,8 +185,10 @@ function waitForResultWithObserver() {
   }, 60000);
 }
 
-// Global delegated event listener for Submit button
+// ------------------------------------------------------------------------------
+// SECTION 6: Submit Button Click Event Listener (Event Delegation)
 // Works continuously across all submissions and SPA problem navigation without needing page reload
+// ------------------------------------------------------------------------------
 document.addEventListener('click', (e) => {
   const btn = e.target.closest('button');
   if (btn) {

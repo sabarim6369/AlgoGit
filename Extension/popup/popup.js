@@ -1,8 +1,24 @@
+// ==============================================================================
+// AlgoGit - Popup UI Controller
+// Description: Manages the popup interface for the AlgoGit Chrome extension:
+//              - GitHub OAuth login and access token management
+//              - Displaying problem statistics across platforms (LeetCode, GFG, etc.)
+//              - Displaying current & longest coding streaks and daily active days
+//              - Updating repository configuration and handling user logout
+// ==============================================================================
+
+// ------------------------------------------------------------------------------
+// SECTION 1: API Configuration & Global State
+// ------------------------------------------------------------------------------
 // const apiurl="https://algogitbackend.onrender.com"
 const apiurl = "http://localhost:8080"
 
 let globalProblemStats = null;
 
+// ------------------------------------------------------------------------------
+// SECTION 2: Problem Statistics UI & Platform Filtering
+// Updates total count, easy, medium, and hard stats based on selected platform
+// ------------------------------------------------------------------------------
 function updateProblemStatsUI(data) {
   globalProblemStats = data;
   applyPlatformFilter('All Platforms');
@@ -52,8 +68,10 @@ function applyPlatformFilter(platform) {
   document.querySelector('.summary-box.hard .count').textContent = hard;
 }
 
-
-
+// ------------------------------------------------------------------------------
+// SECTION 3: API Service - Fetch Problem Counts from Backend
+// Calls POST /problems/getcounts using user email
+// ------------------------------------------------------------------------------
 async function fetchAndDisplayProblemStats() {
   const { repoInfo } = await chrome.storage.local.get(['repoInfo']);
   if (!repoInfo || !repoInfo.email) return;
@@ -75,6 +93,11 @@ async function fetchAndDisplayProblemStats() {
     console.error('❌ Error fetching problem stats:', err);
   }
 }
+
+// ------------------------------------------------------------------------------
+// SECTION 4: API Service - Fetch Streaks & Activity from Backend
+// Calls POST /streak/getstreak to retrieve current, longest streak & active days
+// ------------------------------------------------------------------------------
 async function getstreaks() {
   const { repoInfo } = await chrome.storage.local.get(['repoInfo']);
   if (!repoInfo || !repoInfo.email) return;
@@ -110,12 +133,16 @@ async function getstreaks() {
   }
 }
 
-
+// ------------------------------------------------------------------------------
+// SECTION 5: DOM Initialization & Event Handlers
+// ------------------------------------------------------------------------------
 document.addEventListener('DOMContentLoaded', () => {
   const githubLoginBtn = document.getElementById("githubLogin");
   const welcomePage = document.getElementById("welcomePage");
   const repoSetupDiv = document.getElementById('repoSetup');
   const repoInfoDiv = document.getElementById('repoInfo');
+
+  // SUB-SECTION 5.1: Check if user is already authenticated
   chrome.storage.local.get(['repoInfo'], ({ repoInfo }) => {
     if (repoInfo && repoInfo.githubAccessToken) {
       showRepoInfo(repoInfo);
@@ -130,6 +157,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   welcomePage.style.display = "block";
   repoSetupDiv.style.display = "none";
+
+  // SUB-SECTION 5.2: Welcome Page Navigation
   const enterAppBtn = document.getElementById("enterAppBtn");
   enterAppBtn.addEventListener('click', () => {
     welcomePage.style.display = "none";
@@ -145,6 +174,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const repoDisplayName = document.getElementById('repoDisplayName');
   const logoutBtn = document.getElementById("logoutBtn");
 
+  // SUB-SECTION 5.3: Edit GitHub Repository URL Modal & Update API
   const githubIcon = document.querySelector('.gitimg1');
   const githubPopup = document.getElementById('githubPopup');
   const githubUrlInput = document.getElementById('editGithubUrl');
@@ -207,11 +237,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  // SUB-SECTION 5.4: Initialize Problem Stats & Filter Event Listener
   fetchAndDisplayProblemStats();
   document.getElementById('platformSelect').addEventListener('change', (e) => {
     applyPlatformFilter(e.target.value);
   });
 
+  // SUB-SECTION 5.5: GitHub OAuth2 Login & Authorization Code Exchange
   const CLIENT_ID = 'Ov23liCr0aoMWOhjQht2';
   const REDIRECT_URI = chrome.identity.getRedirectURL();
 
@@ -290,6 +322,7 @@ const authUrl = `https://github.com/login/oauth/authorize?client_id=${CLIENT_ID}
     });
   });
 
+  // SUB-SECTION 5.6: Switch View to Connected Repo Details
   function showRepoInfo(repoInfo) {
     repoSetupDiv.classList.add('hidden');
     repoInfoDiv.classList.remove('hidden');
@@ -298,6 +331,7 @@ const authUrl = `https://github.com/login/oauth/authorize?client_id=${CLIENT_ID}
     if (repoLink) repoLink.href = repoInfo.githuburl;
   }
 
+  // SUB-SECTION 5.7: Logout Button Listener inside DOMContentLoaded
   if (logoutBtn) {
     logoutBtn.addEventListener('click', () => {
       chrome.storage.local.clear(() => {
@@ -309,6 +343,11 @@ const authUrl = `https://github.com/login/oauth/authorize?client_id=${CLIENT_ID}
     });
   }
 });
+
+// ------------------------------------------------------------------------------
+// SECTION 6: UI Toast Notification Helper
+// Renders dynamic toast alerts in the bottom popup container
+// ------------------------------------------------------------------------------
 function showToast(message, type = 'success') {
   const toastContainer = document.getElementById('toastContainer');
 
@@ -333,6 +372,10 @@ function showToast(message, type = 'success') {
   }, 4000);
 }
 
+// ------------------------------------------------------------------------------
+// SECTION 7: Logout Action Handler
+// Clears local Chrome extension storage and resets UI views
+// ------------------------------------------------------------------------------
 document.getElementById("logoutBtn").addEventListener("click", () => {
   chrome.storage.local.clear(() => {
     showToast("Logged out.");
