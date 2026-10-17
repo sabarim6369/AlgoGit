@@ -22,15 +22,22 @@ public class Streakcontroller {
     @PostMapping("/getstreak")
     public streakmodel getStreak(@RequestBody Map<String, String> payload) {
         String email = payload.get("email");
+        if (email != null) {
+            email = email.trim().toLowerCase();
+        }
 
         authmodel user = authrepo.findByEmail(email);
         if (user == null) {
-            throw new RuntimeException("User not found for email: " + email);
+            return new streakmodel();
         }
 
         Long refId = user.getId();
 
         return streakrepo.findByReferenceid(refId)
-                .orElseThrow(() -> new RuntimeException("No streak found for this user"));
+                .orElseGet(() -> {
+                    streakmodel s = new streakmodel();
+                    s.setReferenceid(refId);
+                    return streakrepo.save(s);
+                });
     }
 }

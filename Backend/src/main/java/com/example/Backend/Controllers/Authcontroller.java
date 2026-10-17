@@ -77,10 +77,13 @@ System.out.println(existingUsers+"🙏🙏🙏🙏🙏");
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
         MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
-        body.add("client_id", "Ov23liMfOlf2emj68SBT");
-        body.add("client_secret", "71b64109d07c30fc1732af87248900b51d4c527f");
+        body.add("client_id", "Ov23liCr0aoMWOhjQht2");
+        body.add("client_secret", "1dbd25ab0d2a049829d41d18521496ba7ad14a1d");
         body.add("code", code);
-        body.add("redirect_uri", "https://cdlhoniahlpalcemeddmkmloeiejomie.chromiumapp.org/");
+        String redirectUri = payload.get("redirect_uri");
+        if (redirectUri != null && !redirectUri.isEmpty()) {
+            body.add("redirect_uri", redirectUri);
+        }
 
         HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(body, headers);
         ResponseEntity<Map> response = restTemplate.postForEntity(

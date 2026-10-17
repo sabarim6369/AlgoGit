@@ -42,6 +42,9 @@ public class Submissioncontroller {
         String code = request.getCode();
         String platform = request.getPlatform();
         String email = request.getEmail();
+        if (email != null) {
+            email = email.trim().toLowerCase();
+        }
         String title = request.getTitle();
         String language = request.getlanguage();
         String difficulty = request.getDifficulty();

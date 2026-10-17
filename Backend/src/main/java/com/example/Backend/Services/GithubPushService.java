@@ -48,9 +48,10 @@ public class GithubPushService {
             int nextIndex = getNextFolderIndex(restTemplate, headers, owner, repo, platform + "/" + concept, cleanTitle);
             String folderName = baseFolder + (nextIndex == 1 ? "" : ("_" + nextIndex));
 
+            String ext = getFileExtension(language);
             boolean codePush = pushFileToGithub(
                     restTemplate, headers, owner, repo,
-                    folderName + "/solution."+language,
+                    folderName + "/solution." + ext,
                     "Add solution for: " + questionTitle,
                     code
             );
@@ -100,6 +101,26 @@ public class GithubPushService {
 
     private String sanitizeTitle(String title) {
         return title.trim().replaceAll("[^a-zA-Z0-9]", "_");
+    }
+
+    private String getFileExtension(String language) {
+        if (language == null) return "txt";
+        String lower = language.toLowerCase();
+        if (lower.contains("python")) return "py";
+        if (lower.contains("javascript")) return "js";
+        if (lower.contains("typescript")) return "ts";
+        if (lower.contains("cpp") || lower.contains("c++")) return "cpp";
+        if (lower.contains("c#") || lower.contains("csharp")) return "cs";
+        if (lower.equals("c")) return "c";
+        if (lower.contains("java")) return "java";
+        if (lower.contains("sql") || lower.contains("mysql") || lower.contains("oracle") || lower.contains("postgres")) return "sql";
+        if (lower.contains("go")) return "go";
+        if (lower.contains("rust")) return "rs";
+        if (lower.contains("kotlin")) return "kt";
+        if (lower.contains("swift")) return "swift";
+        if (lower.contains("ruby")) return "rb";
+        if (lower.contains("php")) return "php";
+        return "txt";
     }
 
     private int getNextFolderIndex(RestTemplate restTemplate, HttpHeaders headers,
