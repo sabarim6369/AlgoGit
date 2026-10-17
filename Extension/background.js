@@ -59,6 +59,31 @@ console.log(chrome.identity.getRedirectURL());
           console.log('✅ Backend response:', response);
           chrome.storage.local.set({ lastSubmission: response });
 
+          // Save to recentSubmissions list in chrome.storage.local for instant activity feed
+          chrome.storage.local.get(['recentSubmissions'], ({ recentSubmissions }) => {
+            const list = Array.isArray(recentSubmissions) ? recentSubmissions : [];
+            const cleanBaseUrl = (repoInfo.githuburl || '').replace(/\.git$/, '');
+            const directUrl = response.fileUrl || response.githubUrl || (cleanBaseUrl ? `${cleanBaseUrl}/tree/main/${submissionData.platform}` : '#');
+
+            const newRecord = {
+              title: response.title || submissionData.title,
+              platform: response.platform || submissionData.platform,
+              difficulty: response.difficulty || submissionData.difficulty || 'Unknown',
+              language: response.language || submissionData.language || '',
+              concept: response.concept || '',
+              githubUrl: directUrl,
+              timestamp: Date.now()
+            };
+
+            // Prepend new solution and de-duplicate by title + platform (keep latest 20)
+            const updatedList = [
+              newRecord,
+              ...list.filter(item => !(item.title === newRecord.title && item.platform === newRecord.platform))
+            ].slice(0, 20);
+
+            chrome.storage.local.set({ recentSubmissions: updatedList });
+          });
+
           // Display native Chrome notification for user confirmation
           chrome.notifications.create({
             type: 'basic',

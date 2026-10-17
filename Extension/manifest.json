@@ -19,14 +19,26 @@
   "content_scripts": [
     {
       "matches": ["https://leetcode.com/problems/*"],
+      "js": ["content-scripts/leetcode-main.js"],
+      "world": "MAIN",
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://leetcode.com/problems/*"],
       "js": ["content-scripts/leetcode.js"],
       "run_at": "document_idle"
     },
-     {
-    "matches": ["https://practice.geeksforgeeks.org/problems/*",  "https://www.geeksforgeeks.org/problems/*"],
-    "js": ["content-scripts/gfg.js"],
-    "run_at": "document_idle"
-  }
+    {
+      "matches": ["https://practice.geeksforgeeks.org/problems/*", "https://www.geeksforgeeks.org/problems/*"],
+      "js": ["content-scripts/gfg-main.js"],
+      "world": "MAIN",
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://practice.geeksforgeeks.org/problems/*", "https://www.geeksforgeeks.org/problems/*"],
+      "js": ["content-scripts/gfg.js"],
+      "run_at": "document_idle"
+    }
   ],
    "host_permissions": [
     "https://github.com/*",

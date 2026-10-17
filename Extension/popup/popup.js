@@ -14,6 +14,7 @@
 const apiurl = "http://localhost:8080"
 
 let globalProblemStats = null;
+let cachedRecentSubmissions = [];
 
 // ------------------------------------------------------------------------------
 // SECTION 2: Problem Statistics UI & Platform Filtering
@@ -66,6 +67,162 @@ function applyPlatformFilter(platform) {
   document.querySelector('.summary-box.easy .count').textContent = easy;
   document.querySelector('.summary-box.medium .count').textContent = medium;
   document.querySelector('.summary-box.hard .count').textContent = hard;
+
+  // Filter the recent submissions list to match selected platform
+  filterRecentSubmissions(platform);
+}
+
+// ------------------------------------------------------------------------------
+// SECTION 2B: Recent Submissions Activity Feed Renderer
+// ------------------------------------------------------------------------------
+function getRelativeTime(timestamp) {
+  if (!timestamp) return 'Recently';
+  const now = Date.now();
+  const diffMs = now - new Date(timestamp).getTime();
+  if (isNaN(diffMs) || diffMs < 0) return 'Just now';
+  const diffSec = Math.floor(diffMs / 1000);
+  if (diffSec < 60) return 'Just now';
+  const diffMin = Math.floor(diffSec / 60);
+  if (diffMin < 60) return `${diffMin}m ago`;
+  const diffHr = Math.floor(diffMin / 60);
+  if (diffHr < 24) return `${diffHr}h ago`;
+  const diffDays = Math.floor(diffHr / 24);
+  if (diffDays === 1) return 'Yesterday';
+  if (diffDays < 7) return `${diffDays}d ago`;
+  return new Date(timestamp).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+}
+
+function filterRecentSubmissions(platform) {
+  renderRecentSubmissions(cachedRecentSubmissions, platform);
+}
+
+function renderRecentSubmissions(items, currentFilter = 'All Platforms') {
+  const container = document.getElementById('recentList');
+  const countBadge = document.getElementById('recentCountBadge');
+  if (!container) return;
+
+  const list = Array.isArray(items) ? items : [];
+  cachedRecentSubmissions = list;
+
+  const filtered = list.filter(item => {
+    if (!currentFilter || currentFilter.toLowerCase() === 'all platforms') return true;
+    const p = (item.platform || '').toLowerCase();
+    const filterKey = currentFilter.toLowerCase();
+    if (filterKey === 'leetcode') return p.includes('leetcode');
+    if (filterKey === 'geeksforgeeks') return p.includes('gfg') || p.includes('geek');
+    if (filterKey === 'codeforces') return p.includes('codeforces');
+    if (filterKey === 'codechef') return p.includes('codechef');
+    return true;
+  });
+
+  if (countBadge) {
+    countBadge.textContent = `${list.length} synced`;
+  }
+
+  if (filtered.length === 0) {
+    container.innerHTML = `
+      <div class="recent-empty">
+        <span class="empty-icon">📁</span>
+        <p>No solutions synced ${currentFilter !== 'All Platforms' ? `for ${currentFilter}` : 'yet'}</p>
+        <small>Solve a problem on LeetCode or GFG to see it sync here!</small>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = filtered.map(item => {
+    const platform = (item.platform || '').toLowerCase();
+    const isLC = platform.includes('leetcode');
+    const isGFG = platform.includes('gfg') || platform.includes('geek');
+    const badgeClass = isLC ? 'badge-lc' : (isGFG ? 'badge-gfg' : 'badge-default');
+    const badgeText = isLC ? 'LC' : (isGFG ? 'GFG' : 'CODE');
+
+    const diff = (item.difficulty || 'Easy').toLowerCase();
+    const diffClass = diff === 'hard' ? 'diff-hard' : (diff === 'medium' ? 'diff-medium' : 'diff-easy');
+
+    const timeAgo = getRelativeTime(item.timestamp);
+    const safeTitle = (item.title || 'Untitled Solution').replace(/"/g, '&quot;');
+    const ghUrl = item.githubUrl || '#';
+
+    return `
+      <div class="recent-card">
+        <div class="recent-card-top">
+          <div class="recent-meta-left">
+            <span class="recent-platform-badge ${badgeClass}">${badgeText}</span>
+            <span class="recent-problem-title" title="${safeTitle}">${safeTitle}</span>
+          </div>
+          <a href="${ghUrl}" target="_blank" rel="noopener noreferrer" class="recent-gh-btn" title="View solution on GitHub">
+            <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor">
+              <path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+            </svg>
+            <span>Code ↗</span>
+          </a>
+        </div>
+        <div class="recent-card-bottom">
+          <div class="recent-tags">
+            <span class="recent-pill ${diffClass}">${item.difficulty || 'Easy'}</span>
+            ${item.language ? `<span class="recent-pill pill-lang">${item.language}</span>` : ''}
+            ${item.concept ? `<span class="recent-pill pill-concept">${item.concept}</span>` : ''}
+          </div>
+          <span class="recent-time">${timeAgo}</span>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+async function fetchAndDisplayRecentSubmissions() {
+  // Step 1: Immediately render cached submissions from chrome.storage.local
+  const { recentSubmissions } = await chrome.storage.local.get(['recentSubmissions']);
+  if (recentSubmissions && Array.isArray(recentSubmissions)) {
+    cachedRecentSubmissions = recentSubmissions;
+    renderRecentSubmissions(recentSubmissions);
+  }
+
+  // Step 2: Sync with backend database
+  const { repoInfo } = await chrome.storage.local.get(['repoInfo']);
+  if (!repoInfo || !repoInfo.email) return;
+
+  try {
+    const res = await fetch(`${apiurl}/submission/recent`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: repoInfo.email })
+    });
+
+    if (res.ok) {
+      const records = await res.json();
+      if (Array.isArray(records) && records.length > 0) {
+        const backendFormatted = records.map(r => ({
+          title: r.title,
+          platform: r.platform,
+          difficulty: r.difficulty,
+          language: r.language,
+          concept: r.concept,
+          githubUrl: r.fileUrl || r.githubUrl,
+          timestamp: r.submittedAt ? new Date(r.submittedAt).getTime() : Date.now()
+        }));
+
+        // Merge backend records with local storage records
+        const localList = cachedRecentSubmissions || [];
+        const mergedMap = new Map();
+        [...backendFormatted, ...localList].forEach(item => {
+          const key = `${(item.title || '').trim().toLowerCase()}_${(item.platform || '').trim().toLowerCase()}`;
+          if (!mergedMap.has(key)) {
+            mergedMap.set(key, item);
+          }
+        });
+        const mergedList = Array.from(mergedMap.values()).slice(0, 20);
+
+        chrome.storage.local.set({ recentSubmissions: mergedList });
+        cachedRecentSubmissions = mergedList;
+        const currentFilter = document.getElementById('platformSelect')?.value || 'All Platforms';
+        renderRecentSubmissions(mergedList, currentFilter);
+      }
+    }
+  } catch (err) {
+    console.warn("⚠️ Could not fetch remote recent submissions:", err);
+  }
 }
 
 // ------------------------------------------------------------------------------
@@ -239,6 +396,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // SUB-SECTION 5.4: Initialize Problem Stats & Filter Event Listener
   fetchAndDisplayProblemStats();
+  fetchAndDisplayRecentSubmissions();
   document.getElementById('platformSelect').addEventListener('change', (e) => {
     applyPlatformFilter(e.target.value);
   });

@@ -57,38 +57,67 @@ function detectDifficulty() {
 
 // ------------------------------------------------------------------------------
 // SECTION 3: Code & Problem Metadata Extraction
-// Extracts solution code from Monaco editor DOM lines and title from page URL
+// Extracts solution code from Monaco Editor buffer via DOM Bridge / Main World
 // ------------------------------------------------------------------------------
+let latestMainWorldCode = '';
+let latestMainWorldLang = '';
+
+window.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'ALGOGIT_LEETCODE_CODE_RESPONSE') {
+    if (event.data.code) {
+      latestMainWorldCode = event.data.code;
+    }
+    if (event.data.language) {
+      latestMainWorldLang = event.data.language;
+    }
+  }
+});
+
 function getLeetCodeSubmissionData() {
   try {
-    const lineElements = Array.from(document.querySelectorAll('.view-line'));
+    let code = '';
+    let detectedLang = '';
 
-  const lines = lineElements
-    .map(el => el.innerText.trim())
-    .filter((line, index, self) => line && self.indexOf(line) === index);
+    // 1. Primary: Extract from DOM Bridge connected directly to Monaco Editor memory buffer
+    const bridge = document.getElementById('algogit-code-bridge');
+    if (bridge && bridge.textContent && bridge.textContent.trim().length > 0) {
+      code = bridge.textContent;
+      detectedLang = bridge.getAttribute('data-language') || '';
+      console.log(`✅ Extracted complete code from Monaco bridge (${code.length} chars, ${code.split('\n').length} lines)`);
+    } else if (latestMainWorldCode && latestMainWorldCode.trim().length > 0) {
+      code = latestMainWorldCode;
+      detectedLang = latestMainWorldLang;
+      console.log(`✅ Extracted complete code from window message cache (${code.length} chars)`);
+    }
 
-  const code = lines.join('\n').trim();
+    // 2. Fallback: DOM line scan (preserve ALL lines including closing braces and duplicates)
+    if (!code) {
+      console.warn("⚠️ Monaco bridge not found, falling back to DOM view-line elements...");
+      const lineElements = Array.from(document.querySelectorAll('.view-line'));
+      if (lineElements.length > 0) {
+        // Collect all lines in DOM order (do NOT deduplicate lines! Duplicate lines like '}' or 'return 0;' are essential!)
+        const lines = lineElements.map(el => (el.innerText || '').replace(/\u00A0/g, ' '));
+        code = lines.join('\n').trim();
+      }
+    }
 
-  if (!code) {
-    console.warn("❌ Could not extract code from submission viewer");
-    return null;
-  }
+    if (!code) {
+      console.warn("❌ Could not extract code from submission viewer");
+      return null;
+    }
 
-  const slug = location.pathname.split('/')[2];
-  const title = slug
-    .split('-')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ');
+    const slug = location.pathname.split('/')[2];
+    const title = slug
+      .split('-')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
 
-    
-
-
-
+    const language = detectedLang || detectLanguage();
     const data = {
       platform: 'leetcode',
       title,
       code,
-      language: detectLanguage(),
+      language,
       difficulty: detectDifficulty()
     };
     console.log("📝 Extracted LeetCode submission data:", data);
@@ -159,6 +188,9 @@ function waitForResultWithObserver() {
             activeResultObserver = null;
           }
 
+          // Request latest code snapshot from Monaco main world
+          window.postMessage({ type: 'ALGOGIT_GET_LEETCODE_CODE' }, '*');
+
           // Short delay to let editor/DOM settle
           setTimeout(() => {
             const submission = getLeetCodeSubmissionData();
@@ -196,6 +228,7 @@ document.addEventListener('click', (e) => {
     const isSubmit = /^submit$/i.test(text) || btn.getAttribute('data-e2e-locator') === 'console-submit-button';
     if (isSubmit) {
       console.log("🟡 Submit button clicked!");
+      window.postMessage({ type: 'ALGOGIT_GET_LEETCODE_CODE' }, '*');
       waitForResultWithObserver();
     }
   }
