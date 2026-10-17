@@ -45,5 +45,6 @@ console.log(chrome.identity.getRedirectURL());
         })
         .catch(err => console.error('❌ Error sending submission:', err));
     });
+    return true;
   }
 });

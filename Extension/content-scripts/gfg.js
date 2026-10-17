@@ -39,12 +39,41 @@ function getGFGSubmissionData() {
 
 
 function sendSubmissionToBackground(data) {
-  console.log("📤 Sending GFG submission to background:", data);
-  chrome.runtime.sendMessage({ action: 'submission', data });
+  try {
+    console.log("📤 Sending GFG submission to background:", data);
+    chrome.runtime.sendMessage({ action: 'submission', data }, (response) => {
+      if (chrome.runtime.lastError) {
+        if (chrome.runtime.lastError.message?.includes("context invalidated")) {
+          console.warn("⚠️ AlgoGit: Extension was reloaded in chrome://extensions. Please refresh (F5) this page to reconnect.");
+        } else {
+          console.log("✅ AlgoGit GFG background response:", response || "ok");
+        }
+      } else {
+        console.log("✅ GFG Message dispatched to background script successfully");
+      }
+    });
+  } catch (err) {
+    if (err.message && err.message.includes("Extension context invalidated")) {
+      console.warn("⚠️ AlgoGit: Extension was reloaded in chrome://extensions. Please refresh (F5) this page to reconnect.");
+    } else {
+      console.error("❌ AlgoGit GFG send error:", err);
+    }
+  }
 }
 
+let activeGFGResultObserver = null;
+
 function waitForResultWithObserverGFG() {
-  const observer = new MutationObserver((mutations) => {
+  if (activeGFGResultObserver) {
+    activeGFGResultObserver.disconnect();
+    activeGFGResultObserver = null;
+  }
+
+  let handled = false;
+
+  activeGFGResultObserver = new MutationObserver((mutations) => {
+    if (handled) return;
+
     for (const mutation of mutations) {
       for (const node of mutation.addedNodes) {
         if (!(node instanceof HTMLElement)) continue;
@@ -52,41 +81,45 @@ function waitForResultWithObserverGFG() {
         const match = text.match(/(Correct Answer|Wrong Answer|Compilation Error|Time Limit Exceeded|Run Time Error)/i);
 
         if (match) {
+          handled = true;
           const status = match[0];
           console.log(`✅ GFG Final Result Detected: ${status}`);
 
-          const submission = getGFGSubmissionData();
-          if (submission) {
-            submission.status = status;
-            sendSubmissionToBackground(submission);
+          if (activeGFGResultObserver) {
+            activeGFGResultObserver.disconnect();
+            activeGFGResultObserver = null;
           }
 
-          observer.disconnect();
+          setTimeout(() => {
+            const submission = getGFGSubmissionData();
+            if (submission) {
+              submission.status = status;
+              sendSubmissionToBackground(submission);
+            }
+          }, 400);
+
           return;
         }
       }
     }
   });
 
-  observer.observe(document.body, { childList: true, subtree: true });
-}
+  activeGFGResultObserver.observe(document.body, { childList: true, subtree: true });
 
-function monitorGFGSubmitButton() {
-  const observer = new MutationObserver(() => {
-    const submitBtn = [...document.querySelectorAll('button')]
-      .find(btn => /submit/i.test(btn.innerText));
-
-    if (submitBtn) {
-      console.log("✅ GFG Submit button found, attaching listener");
-      submitBtn.addEventListener('click', () => {
-        console.log("🟡 GFG Submit button clicked!");
-        waitForResultWithObserverGFG();
-      });
-      observer.disconnect();
+  setTimeout(() => {
+    if (activeGFGResultObserver && !handled) {
+      activeGFGResultObserver.disconnect();
+      activeGFGResultObserver = null;
     }
-  });
-
-  observer.observe(document.body, { childList: true, subtree: true });
+  }, 60000);
 }
 
-monitorGFGSubmitButton();
+// Global delegated event listener for GFG Submit button
+document.addEventListener('click', (e) => {
+  const btn = e.target.closest('button');
+  if (btn && /submit/i.test(btn.innerText || '')) {
+    console.log("🟡 GFG Submit button clicked!");
+    waitForResultWithObserverGFG();
+  }
+}, true);
+

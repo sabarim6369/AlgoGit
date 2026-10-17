@@ -9,7 +9,7 @@ import java.util.*;
 @Service
 public class AiService {
 
-    private static final String API_KEY = "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";
+    private static final String API_KEY = "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";
     private static final String API_URL = "https://api.groq.com/openai/v1/chat/completions";
 
     public String summarizeSolution(String code) {
@@ -23,7 +23,7 @@ public class AiService {
 
         // Create request body
         Map<String, Object> requestBody = new HashMap<>();
-        requestBody.put("model", "llama3-8b-8192");
+        requestBody.put("model", "openai/gpt-oss-20b");
         requestBody.put("messages", messages);
 
         // Set headers
@@ -42,18 +42,20 @@ public class AiService {
             System.out.println("Concept Explanation:\n" + message.get("content"));
             return (String) message.get("content"); // final step-by-step explanation
         } catch (Exception e) {
+            System.err.println("❌ Error in summarizeSolution: " + e.getMessage());
             return "Error calling Groq API: " + e.getMessage();
         }
     }
+
     public String extractConcept(String code) {
-        String instruction = "Given a code snippet, identify the main computer science concept used (e.g., dynamic programming, depth-first search, sliding window, greedy). Respond with only the concept name.";
+        String instruction = "Given a code snippet, identify the main computer science concept or topic used (e.g., Array, SQL, Dynamic Programming, String, Tree, Graph, Sliding Window, Greedy, Binary Search, Math, Database). Respond with only the concept name in 1 to 3 words. Do not include markdown, punctuation, or any other words.";
 
         List<Map<String, String>> messages = new ArrayList<>();
         messages.add(Map.of("role", "system", "content", instruction));
         messages.add(Map.of("role", "user", "content", code));
 
         Map<String, Object> requestBody = new HashMap<>();
-        requestBody.put("model", "llama3-8b-8192");
+        requestBody.put("model", "openai/gpt-oss-20b");
         requestBody.put("messages", messages);
 
         HttpHeaders headers = new HttpHeaders();
@@ -69,9 +71,14 @@ public class AiService {
             Map<String, Object> message = (Map<String, Object>) choices.get(0).get("message");
 
             String concept = ((String) message.get("content")).trim();
-            return concept.replaceAll("[^a-zA-Z0-9]", "_"); // sanitize for folder use
+            concept = concept.replace("\"", "").replace("'", "").replace(".", "").trim();
+            String sanitized = concept.replaceAll("[^a-zA-Z0-9]+", "_");
+            System.out.println("💡 Identified concept: " + sanitized + " (from raw: " + concept + ")");
+            return sanitized.isEmpty() ? "General" : sanitized;
         } catch (Exception e) {
-            return "Unknown";
+            System.err.println("❌ Error in extractConcept: " + e.getMessage());
+            e.printStackTrace();
+            return "General";
         }
     }
 
