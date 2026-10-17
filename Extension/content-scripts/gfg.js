@@ -30,18 +30,45 @@ function detectDifficultyGFG() {
 
 // ------------------------------------------------------------------------------
 // SECTION 3: Code & Problem Metadata Extraction
-// Extracts solution code from Ace editor lines and problem title from URL
+// Extracts solution code from Ace Editor memory buffer via DOM Bridge / Main World
 // ------------------------------------------------------------------------------
+let latestGFGMainWorldCode = '';
+
+window.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'ALGOGIT_GFG_CODE_RESPONSE') {
+    if (event.data.code) {
+      latestGFGMainWorldCode = event.data.code;
+    }
+  }
+});
+
 function getGFGSubmissionData() {
-  const codeEl = document.querySelector('.ace_content') || document.querySelector('code');
-  if (!codeEl) {
+  let code = '';
+
+  // 1. Primary: Extract from DOM Bridge connected directly to Ace editor memory buffer
+  const bridge = document.getElementById('algogit-gfg-bridge');
+  if (bridge && bridge.textContent && bridge.textContent.trim().length > 0) {
+    code = bridge.textContent;
+    console.log(`✅ Extracted complete code from GFG Ace bridge (${code.length} chars, ${code.split('\n').length} lines)`);
+  } else if (latestGFGMainWorldCode && latestGFGMainWorldCode.trim().length > 0) {
+    code = latestGFGMainWorldCode;
+    console.log(`✅ Extracted complete code from GFG window message cache (${code.length} chars)`);
+  }
+
+  // 2. Fallback: DOM line scan
+  if (!code) {
+    console.warn("⚠️ GFG bridge not found, falling back to DOM .ace_line elements...");
+    const codeEl = document.querySelector('.ace_content') || document.querySelector('code');
+    if (codeEl) {
+      const lines = Array.from(codeEl.querySelectorAll('.ace_line')).map(el => (el.innerText || '').replace(/\u00A0/g, ' '));
+      code = lines.length ? lines.join('\n').trim() : codeEl.innerText.trim();
+    }
+  }
+
+  if (!code) {
     console.warn("❌ Could not find code element");
     return null;
   }
-
-  const lines = Array.from(codeEl.querySelectorAll('.ace_line')).map(el => el.innerText.trim());
-  const code = lines.length ? lines.join('\n').trim() : codeEl.innerText.trim();
-
 
   const slug = location.pathname.split('/')[2];
   const fallbackTitle = slug
@@ -118,6 +145,9 @@ function waitForResultWithObserverGFG() {
             activeGFGResultObserver = null;
           }
 
+          // Request latest code snapshot from Ace editor main world
+          window.postMessage({ type: 'ALGOGIT_GET_GFG_CODE' }, '*');
+
           setTimeout(() => {
             const submission = getGFGSubmissionData();
             if (submission) {
@@ -150,6 +180,7 @@ document.addEventListener('click', (e) => {
   const btn = e.target.closest('button');
   if (btn && /submit/i.test(btn.innerText || '')) {
     console.log("🟡 GFG Submit button clicked!");
+    window.postMessage({ type: 'ALGOGIT_GET_GFG_CODE' }, '*');
     waitForResultWithObserverGFG();
   }
 }, true);

@@ -13,6 +13,7 @@ import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import com.example.Backend.Dto.PushResult;
 
 @Service
 public class GithubPushService {
@@ -22,11 +23,11 @@ public class GithubPushService {
     @Autowired
     private AiService aiService;
 
-    public boolean pushToRepo(String email, String questionTitle, String code, String explanation, String platform,String language) {
+    public PushResult pushToRepo(String email, String questionTitle, String code, String explanation, String platform, String language) {
         authmodel data = authrepo.findByEmail(email);
         if (data == null || data.getGithuburl() == null || data.getGithubAccessToken() == null) {
             System.out.println("❌ Missing data for email: " + email);
-            return false;
+            return new PushResult(false);
         }
 
         try {
@@ -49,9 +50,10 @@ public class GithubPushService {
             String folderName = baseFolder + (nextIndex == 1 ? "" : ("_" + nextIndex));
 
             String ext = getFileExtension(language);
+            String filePath = folderName + "/solution." + ext;
             boolean codePush = pushFileToGithub(
                     restTemplate, headers, owner, repo,
-                    folderName + "/solution." + ext,
+                    filePath,
                     "Add solution for: " + questionTitle,
                     code
             );
@@ -63,11 +65,15 @@ public class GithubPushService {
                     explanation
             );
 
-            return codePush && explanationPush;
+            boolean success = codePush && explanationPush;
+            String githubFolderUrl = "https://github.com/" + owner + "/" + repo + "/tree/main/" + folderName;
+            String githubFileUrl = "https://github.com/" + owner + "/" + repo + "/blob/main/" + filePath;
+
+            return new PushResult(success, folderName, filePath, githubFolderUrl, githubFileUrl, concept);
 
         } catch (Exception e) {
             e.printStackTrace();
-            return false;
+            return new PushResult(false);
         }
     }
 

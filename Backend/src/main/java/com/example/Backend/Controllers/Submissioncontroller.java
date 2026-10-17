@@ -1,15 +1,20 @@
 package com.example.Backend.Controllers;
 
+import com.example.Backend.Dto.PushResult;
+import com.example.Backend.Models.SubmissionRecord;
 import com.example.Backend.Models.Submissionmodel;
 import com.example.Backend.Models.problemsmodel;
 import com.example.Backend.Models.streakmodel;
 import com.example.Backend.Repositories.Authrepo;
 import com.example.Backend.Repositories.Problemsrepo;
 import com.example.Backend.Repositories.Streakrepo;
+import com.example.Backend.Repositories.SubmissionRecordRepo;
 import com.example.Backend.Repositories.Submissionrepo;
 import com.example.Backend.Services.AiService;
 import com.example.Backend.Services.GithubPushService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -19,7 +24,10 @@ import com.example.Backend.Dto.SubmissionRequest;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -27,6 +35,8 @@ import java.util.Optional;
 public class Submissioncontroller {
     @Autowired
     private Submissionrepo submissionrepo;
+    @Autowired
+    private SubmissionRecordRepo submissionRecordRepo;
     @Autowired
     private AiService aiService;
     @Autowired
@@ -38,7 +48,7 @@ public class Submissioncontroller {
     @Autowired
     private Streakrepo streakrepo;
     @PostMapping("/submit")
-    public String submit(@RequestBody SubmissionRequest request) {
+    public ResponseEntity<?> submit(@RequestBody SubmissionRequest request) {
         String code = request.getCode();
         String platform = request.getPlatform();
         String email = request.getEmail();
@@ -51,16 +61,19 @@ public class Submissioncontroller {
         String status = request.getStatus();
 
         if ("Wrong Answer".equalsIgnoreCase(status)) {
-            return "Skipped wrong answer";
+            Map<String, Object> skipped = new HashMap<>();
+            skipped.put("status", "skipped");
+            skipped.put("message", "Skipped wrong answer");
+            return ResponseEntity.ok(skipped);
         }
 
         System.out.println("✅✅✅" + request);
         System.out.println("Email😍😍😍😍😍" + email);
 
         String summary = aiService.summarizeSolution(code);
-        boolean pushed = githubPushService.pushToRepo(email, title, code, summary, platform, language);
+        PushResult pushResult = githubPushService.pushToRepo(email, title, code, summary, platform, language);
 
-        if (pushed) {
+        if (pushResult != null && pushResult.isSuccess()) {
             var user = authrepo.findByEmail(email);
             if (user != null) {
                 Long refId = user.getId();
@@ -151,12 +164,54 @@ public class Submissioncontroller {
                 problemsrepo.save(model);
             }
 
-            return "Submission pushed successfully!";
+            // Save submission record for history & activity feed
+            try {
+                SubmissionRecord record = new SubmissionRecord(
+                        email,
+                        title,
+                        platform,
+                        difficulty,
+                        language,
+                        pushResult.getConcept(),
+                        pushResult.getGithubUrl(),
+                        pushResult.getFileUrl(),
+                        LocalDateTime.now()
+                );
+                submissionRecordRepo.save(record);
+            } catch (Exception e) {
+                System.err.println("⚠️ Could not save submission record: " + e.getMessage());
+            }
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("status", "success");
+            response.put("message", "Submission pushed successfully!");
+            response.put("title", title);
+            response.put("platform", platform);
+            response.put("difficulty", difficulty);
+            response.put("language", language);
+            response.put("concept", pushResult.getConcept());
+            response.put("githubUrl", pushResult.getGithubUrl());
+            response.put("fileUrl", pushResult.getFileUrl());
+            response.put("submittedAt", LocalDateTime.now().toString());
+
+            return ResponseEntity.ok(response);
         } else {
-            return "Failed to push submission.";
+            Map<String, Object> err = new HashMap<>();
+            err.put("status", "error");
+            err.put("message", "Failed to push submission.");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(err);
         }
     }
 
-
-
+    @PostMapping("/recent")
+    public ResponseEntity<List<SubmissionRecord>> getRecentSubmissions(@RequestBody Map<String, String> payload) {
+        String email = payload.get("email");
+        if (email != null) {
+            email = email.trim().toLowerCase();
+            List<SubmissionRecord> records = submissionRecordRepo.findTop20ByEmailOrderBySubmittedAtDesc(email);
+            return ResponseEntity.ok(records);
+        }
+        return ResponseEntity.badRequest().build();
+    }
 }
+
