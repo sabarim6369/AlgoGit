@@ -10,6 +10,7 @@ import org.springframework.web.client.RestTemplate;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.Base64;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -23,7 +24,7 @@ public class GithubPushService {
     @Autowired
     private AiService aiService;
 
-    public PushResult pushToRepo(String email, String questionTitle, String code, String explanation, String platform, String language) {
+    public PushResult pushToRepo(String email, String questionTitle, String code, String readmeContent, String platform, String language, String concept) {
         authmodel data = authrepo.findByEmail(email);
         if (data == null || data.getGithuburl() == null || data.getGithubAccessToken() == null) {
             System.out.println("❌ Missing data for email: " + email);
@@ -42,7 +43,9 @@ public class GithubPushService {
             headers.setContentType(MediaType.APPLICATION_JSON);
             headers.setBearerAuth(token);
 
-            String concept = aiService.extractConcept(code);
+            if (concept == null || concept.isBlank()) {
+                concept = aiService.extractConcept(code);
+            }
             String cleanTitle = sanitizeTitle(questionTitle);
 
             String baseFolder = platform + "/" + concept + "/" + cleanTitle;
@@ -58,14 +61,16 @@ public class GithubPushService {
                     code
             );
 
-            boolean explanationPush = pushFileToGithub(
+            // Replace explanation.txt with README.md for native GitHub rendering
+            String readmePath = folderName + "/README.md";
+            boolean readmePush = pushFileToGithub(
                     restTemplate, headers, owner, repo,
-                    folderName + "/explanation.txt",
-                    "Add explanation for: " + questionTitle,
-                    explanation
+                    readmePath,
+                    "Add README.md explanation for: " + questionTitle,
+                    readmeContent
             );
 
-            boolean success = codePush && explanationPush;
+            boolean success = codePush && readmePush;
             String githubFolderUrl = "https://github.com/" + owner + "/" + repo + "/tree/main/" + folderName;
             String githubFileUrl = "https://github.com/" + owner + "/" + repo + "/blob/main/" + filePath;
 
@@ -77,6 +82,10 @@ public class GithubPushService {
         }
     }
 
+    public PushResult pushToRepo(String email, String questionTitle, String code, String readmeContent, String platform, String language) {
+        return pushToRepo(email, questionTitle, code, readmeContent, platform, language, null);
+    }
+
     private boolean pushFileToGithub(RestTemplate restTemplate, HttpHeaders headers,
                                      String owner, String repo, String filePath,
                                      String commitMessage, String content) {
@@ -84,23 +93,43 @@ public class GithubPushService {
             String encodedContent = Base64.getEncoder().encodeToString(content.getBytes(StandardCharsets.UTF_8));
             String apiUrl = "https://api.github.com/repos/" + owner + "/" + repo + "/contents/" + filePath;
 
-            Map<String, Object> body = Map.of(
-                    "message", commitMessage,
-                    "content", encodedContent
-            );
+            Map<String, Object> body = new HashMap<>();
+            body.put("message", commitMessage);
+            body.put("content", encodedContent);
+
+            // Retrieve existing file SHA if updating existing solution/README
+            try {
+                HttpEntity<Void> checkRequest = new HttpEntity<>(headers);
+                ResponseEntity<Map> checkResp = restTemplate.exchange(apiUrl, HttpMethod.GET, checkRequest, Map.class);
+                if (checkResp.getStatusCode().is2xxSuccessful() && checkResp.getBody() != null) {
+                    Object sha = checkResp.getBody().get("sha");
+                    if (sha != null) {
+                        body.put("sha", sha.toString());
+                    }
+                }
+            } catch (Exception ignored) {
+                // File does not exist yet (404), which is expected for new submissions
+            }
 
             HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
             ResponseEntity<String> response = restTemplate.exchange(apiUrl, HttpMethod.PUT, request, String.class);
 
             if (response.getStatusCode().is2xxSuccessful()) {
-                System.out.println("✅ File pushed: " + filePath);
+                System.out.println("✅ File pushed to GitHub: " + filePath);
                 return true;
             } else {
-                System.out.println("❌ Failed to push: " + filePath + " → " + response.getStatusCode());
+                System.err.println("❌ Failed to push: " + filePath + " → " + response.getStatusCode());
                 return false;
             }
         } catch (Exception ex) {
-            ex.printStackTrace();
+            if (ex.getMessage() != null && ex.getMessage().contains("401")) {
+                System.err.println("❌ [GitHub 401 Bad Credentials] GitHub Access Token is expired or revoked for repository " + owner + "/" + repo + ".");
+                System.err.println("👉 FIX: Open the AlgoGit extension popup, click Logout, and click 'Authenticate with GitHub' to get a fresh token.");
+            } else if (ex.getMessage() != null && ex.getMessage().contains("404")) {
+                System.err.println("❌ [GitHub 404 Not Found] Repository https://github.com/" + owner + "/" + repo + " was not found or the token does not have write access to it.");
+            } else {
+                System.err.println("❌ Error pushing file to GitHub: " + ex.getMessage());
+            }
             return false;
         }
     }

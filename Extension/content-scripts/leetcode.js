@@ -106,6 +106,23 @@ function getLeetCodeSubmissionData() {
       return null;
     }
 
+    function extractLeetCodeDescription() {
+      const selectors = [
+        '[data-track-load="description_content"]',
+        'div[data-key="description-content"]',
+        '.elfjS',
+        'div[class*="content__"]',
+        '.question-content'
+      ];
+      for (const sel of selectors) {
+        const el = document.querySelector(sel);
+        if (el && el.innerText && el.innerText.trim().length > 20) {
+          return el.innerText.trim();
+        }
+      }
+      return '';
+    }
+
     const slug = location.pathname.split('/')[2];
     const title = slug
       .split('-')
@@ -113,12 +130,17 @@ function getLeetCodeSubmissionData() {
       .join(' ');
 
     const language = detectedLang || detectLanguage();
+    const problemUrl = window.location.origin + window.location.pathname;
+    const problemDescription = extractLeetCodeDescription();
+
     const data = {
       platform: 'leetcode',
       title,
       code,
       language,
-      difficulty: detectDifficulty()
+      difficulty: detectDifficulty(),
+      problemUrl,
+      problemDescription
     };
     console.log("📝 Extracted LeetCode submission data:", data);
     return data;
@@ -134,6 +156,10 @@ function getLeetCodeSubmissionData() {
 // ------------------------------------------------------------------------------
 function sendSubmissionToBackground(data) {
   try {
+    if (typeof chrome === 'undefined' || !chrome.runtime || typeof chrome.runtime.sendMessage !== 'function') {
+      console.warn("⚠️ AlgoGit: Extension was updated or reloaded in chrome://extensions. Please refresh (F5) this page to reconnect.");
+      return;
+    }
     console.log("📤 Sending submission to background:", data);
     chrome.runtime.sendMessage({ action: 'submission', data }, (response) => {
       if (chrome.runtime.lastError) {
@@ -147,7 +173,7 @@ function sendSubmissionToBackground(data) {
       }
     });
   } catch (err) {
-    if (err.message && err.message.includes("Extension context invalidated")) {
+    if (err.message && (err.message.includes("Extension context invalidated") || err.message.includes("sendMessage"))) {
       console.warn("⚠️ AlgoGit: Extension was reloaded in chrome://extensions. Please refresh (F5) this page to reconnect.");
     } else {
       console.error("❌ AlgoGit send error:", err);

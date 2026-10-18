@@ -77,10 +77,10 @@ graph TD
 3. **Verdict Observer**: `leetcode.js` starts a `MutationObserver` watching for terminal submission verdicts (`Accepted`, `Wrong Answer`, `Runtime Error`, etc.).
 4. **Data Dispatch**: Upon detecting `Accepted`, `leetcode.js` reads the 100% complete code from the bridge, constructs a submission payload (`platform`, `title`, `code`, `language`, `difficulty`), and dispatches it via `chrome.runtime.sendMessage` to `background.js`.
 5. **Enrichment**: `background.js` pulls the user's configured GitHub repository URL and email from `chrome.storage.local` and sends an HTTP POST to `http://localhost:8080/submission/submit`.
-6. **AI Classification**: `AiService` sends the solution code to Groq (`openai/gpt-oss-20b`) to extract the algorithmic pattern (e.g. `Sliding Window`, `Dynamic Programming`, `Graph`, `SQL`) and generate an architectural summary.
+6. **AI Classification & README Generation**: `AiService` sends the solution code and metadata to Groq to extract the algorithmic pattern and generate a comprehensive `README.md` with problem description, constraints, LaTeX math equations, and Big-O analysis.
 7. **GitHub Push**: `GithubPushService` encodes the solution to Base64, determines directory collision indices, and issues GitHub REST API calls (`PUT /repos/{owner}/{repo}/contents/{path}`) to create:
    - `/{platform}/{concept}/{title}/solution.{ext}`
-   - `/{platform}/{concept}/{title}/explanation.txt`
+   - `/{platform}/{concept}/{title}/README.md` (natively rendered by GitHub on folder navigation)
 8. **State Persistence**:
    - Updates `problemsmodel` (incrementing platform & difficulty counters).
    - Recalculates `streakmodel` (current streak, longest streak, active weekdays).

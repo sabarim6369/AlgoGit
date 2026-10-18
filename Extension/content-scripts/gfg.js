@@ -70,18 +70,44 @@ function getGFGSubmissionData() {
     return null;
   }
 
+  function extractGFGDescription() {
+    const selectors = [
+      '.problem-statement',
+      '[class*="problem-statement"]',
+      '.problemDescription',
+      '.problems_problem_content__X2_K5',
+      '#problem-statement'
+    ];
+    for (const sel of selectors) {
+      const el = document.querySelector(sel);
+      if (el && el.innerText && el.innerText.trim().length > 20) {
+        return el.innerText.trim();
+      }
+    }
+    return '';
+  }
+
   const slug = location.pathname.split('/')[2];
   const fallbackTitle = slug
     .replace(/\d+$/, '') // remove trailing numbers like "4257"
     .replace(/-/g, ' ')
     .replace(/\b\w/g, ch => ch.toUpperCase()); // capitalize each word
 
+  const titleEl = document.querySelector('.problem-tab__name, .problems_header_content__title__title__Xo_9Q, .g-m-0, h3');
+  const pageTitle = titleEl?.innerText?.trim();
+  const finalTitle = (pageTitle && pageTitle.length > 2) ? pageTitle : fallbackTitle;
+
+  const problemUrl = window.location.origin + window.location.pathname;
+  const problemDescription = extractGFGDescription();
+
   return {
     platform: 'gfg',
-    title: fallbackTitle||"No",
+    title: finalTitle || "No",
     code,
     language: detectLanguageGFG(),
     difficulty: detectDifficultyGFG(),
+    problemUrl,
+    problemDescription
   };
 }
 
@@ -91,6 +117,10 @@ function getGFGSubmissionData() {
 // ------------------------------------------------------------------------------
 function sendSubmissionToBackground(data) {
   try {
+    if (typeof chrome === 'undefined' || !chrome.runtime || typeof chrome.runtime.sendMessage !== 'function') {
+      console.warn("⚠️ AlgoGit: Extension was updated or reloaded in chrome://extensions. Please refresh (F5) this page to reconnect.");
+      return;
+    }
     console.log("📤 Sending GFG submission to background:", data);
     chrome.runtime.sendMessage({ action: 'submission', data }, (response) => {
       if (chrome.runtime.lastError) {
@@ -104,7 +134,7 @@ function sendSubmissionToBackground(data) {
       }
     });
   } catch (err) {
-    if (err.message && err.message.includes("Extension context invalidated")) {
+    if (err.message && (err.message.includes("Extension context invalidated") || err.message.includes("sendMessage"))) {
       console.warn("⚠️ AlgoGit: Extension was reloaded in chrome://extensions. Please refresh (F5) this page to reconnect.");
     } else {
       console.error("❌ AlgoGit GFG send error:", err);

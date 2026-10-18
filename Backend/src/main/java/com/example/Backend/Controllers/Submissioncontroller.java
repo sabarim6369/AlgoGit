@@ -70,8 +70,23 @@ public class Submissioncontroller {
         System.out.println("✅✅✅" + request);
         System.out.println("Email😍😍😍😍😍" + email);
 
-        String summary = aiService.summarizeSolution(code);
-        PushResult pushResult = githubPushService.pushToRepo(email, title, code, summary, platform, language);
+        String problemUrl = request.getProblemUrl();
+        if (problemUrl == null || problemUrl.trim().isEmpty()) {
+            if ("leetcode".equalsIgnoreCase(platform)) {
+                String slug = title.toLowerCase().replaceAll("[^a-z0-9]+", "-").replaceAll("^-|-$", "");
+                problemUrl = "https://leetcode.com/problems/" + slug + "/";
+            } else if ("gfg".equalsIgnoreCase(platform)) {
+                String slug = title.toLowerCase().replaceAll("[^a-z0-9]+", "-").replaceAll("^-|-$", "");
+                problemUrl = "https://www.geeksforgeeks.org/problems/" + slug + "/1";
+            } else {
+                problemUrl = "https://github.com";
+            }
+        }
+        String problemDescription = request.getProblemDescription();
+
+        String concept = aiService.extractConcept(code);
+        String readmeContent = aiService.generateReadme(title, platform, difficulty, language, code, problemUrl, problemDescription, concept);
+        PushResult pushResult = githubPushService.pushToRepo(email, title, code, readmeContent, platform, language, concept);
 
         if (pushResult != null && pushResult.isSuccess()) {
             var user = authrepo.findByEmail(email);

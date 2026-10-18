@@ -9,6 +9,8 @@ public class SubmissionRequest {
     private String language;
     private String difficulty;
     private String status;
+    private String problemUrl;
+    private String problemDescription;
 
     // Getters and setters
     public String getEmail() { return email; }
@@ -38,6 +40,10 @@ public class SubmissionRequest {
         return language;
     }
 
+    public void setLanguage(String language) {
+        this.language = language;
+    }
+
     public void getlanguage(String language) {
         this.language = language;
     }
@@ -56,5 +62,21 @@ public class SubmissionRequest {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public String getProblemUrl() {
+        return problemUrl;
+    }
+
+    public void setProblemUrl(String problemUrl) {
+        this.problemUrl = problemUrl;
+    }
+
+    public String getProblemDescription() {
+        return problemDescription;
+    }
+
+    public void setProblemDescription(String problemDescription) {
+        this.problemDescription = problemDescription;
     }
 }
